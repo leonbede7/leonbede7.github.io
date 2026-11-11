@@ -6,7 +6,7 @@ import { FACTS, SITE } from '../data/site';
 const WORK = [
   {
     name: 'Kokpit',
-    what: 'Platform for car dealerships',
+    what: 'Founder and engineer. Platform for car dealerships',
     when: 'Sep 2026 to now',
     href: '/work/kokpit/',
     points: [
@@ -22,7 +22,7 @@ const WORK = [
     href: '/work/assistant/',
     points: [
       'Designed an agent whose write tools only create proposals; the database applies a change after a person confirms. Added a number guard, injection defence and pseudonymisation of personal data.',
-      `Built its evaluation: 132 offline cases on every commit and 105 live cases; ${FACTS.evalPass} passed at about ${FACTS.evalCost} an answer. Repaired the evaluation itself before tuning the assistant.`,
+      `Built its evaluation: 132 offline cases on every commit and 105 live cases; ${FACTS.evalPass} passed (DeepSeek, November 2026) at about ${FACTS.evalCost} an answer. Found and repaired faults in the evaluation itself before tuning the assistant.`,
     ],
   },
   {
@@ -80,11 +80,11 @@ const SKILLS = [
 
     <section class="cv__sec">
       <h2 class="lt">Profile</h2>
-      <p class="cv__profile">I design AI products around real business work and ship them by directing coding agents, with the evaluation, tests and review that make agent-written code safe to rely on. I built Kokpit, a platform for car dealerships that runs my family’s dealership and a public demo installation. {SITE.availability}, with {SITE.eligibility}.</p>
+      <p class="cv__profile">AI product engineer. I design LLM features around real business work and ship them by directing coding agents (Claude Code, Codex), with the evaluation, tests and review that make agent-written code safe to rely on; I own and can defend every architectural decision. I built Kokpit, a platform for car dealerships that runs my family’s dealership and a public demo installation. {SITE.availability}, with {SITE.eligibility}.</p>
     </section>
 
     <section class="cv__sec">
-      <h2 class="lt">Selected work</h2>
+      <h2 class="lt">Engineering experience</h2>
       <div class="cv__work">
         {WORK.map((w) => (
           <div class="job">
@@ -98,7 +98,7 @@ const SKILLS = [
 
     <div class="cv__two">
       <section class="cv__sec">
-        <h2 class="lt">Experience</h2>
+        <h2 class="lt">Other experience</h2>
         <div class="job">
           <h3><b class="title">Automobili Galerija</b> <span>Business operations and AI product development</span></h3>
           <p class="job__when lt tnum">2021 to present</p>
