@@ -1,0 +1,20 @@
+---
+// Private CV variants for single job applications. Built only when CV_VARIANTS points at a JSON file
+// outside this repository ({ "slug": CvVariant, ... }); the public build has no such file and emits no pages.
+import { readFileSync } from 'node:fs';
+import Base from '../../layouts/Base.astro';
+import CvSheet from '../../components/CvSheet.astro';
+import { applyVariant, type CvVariant } from '../../data/cv';
+
+export function getStaticPaths() {
+  const file = process.env.CV_VARIANTS;
+  if (!file) return [];
+  const all = JSON.parse(readFileSync(file, 'utf-8')) as Record<string, CvVariant>;
+  return Object.entries(all).map(([variant, v]) => ({ params: { variant }, props: { v } }));
+}
+
+const cv = applyVariant(Astro.props.v as CvVariant);
+---
+<Base title="CV" description="CV of Leon Bede, AI product engineer." sheet="C-001" drawing="Curriculum vitae">
+  <CvSheet {...cv} pdf={false} />
+</Base>
