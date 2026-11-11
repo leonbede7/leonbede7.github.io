@@ -1,0 +1,39 @@
+---
+title: PredictionDesk
+sheet: B-202
+order: 6
+kind: street
+building: observatory
+status: research
+summary: Quantitative research on prediction markets, kept because of what it did not find.
+lede: A paper-trading research desk for prediction markets. Its most useful results are the strategies it was built around and then showed not to work.
+role: Research questions, statistical method and the decision to stop. Built with coding agents.
+period: August 2026
+stack: [TypeScript, Node.js, WebSocket streams, Vitest, Statistics]
+figures:
+  - { v: '3,703 to 0', k: "arbitrage signals, once the order books were merged correctly" }
+  - { v: '0', k: "real money traded; every result is on paper" }
+  - { v: '6', k: "findings written up, five of them negative" }
+---
+
+## What it is
+
+A desk that streams two prediction-market venues, prices opportunities net of fees and of the depth actually available, sizes them through one risk policy, and records every decision, including the ones where it declined to trade. It trades on paper only. Live execution exists behind a gate and has never been used.
+
+The code is not public. I include it for the method and for what the project taught me about checking my own work.
+
+## What it found
+
+**The arbitrage it was built to catch does not exist.** The first version reported 3,703 arbitrage signals. After the two sides of each market's order book were merged correctly, the count went to zero. The earlier signals came from comparing a fresh book with a stale one. Finding that is the most valuable thing the project produced.
+
+**Passive market making had no edge.** It worked end to end and paid nothing in fees, which was the idea. But the typical spread on both venues is a single tick, so there is nowhere to stand inside it. It ships switched off.
+
+**A real bias that cannot be harvested the obvious way.** Cheap contracts are overpriced on average, and that survives an out-of-sample split by date. But a resting offer gets filled by whoever wants it most, so the fills are chosen by the counterparty. On a live paper run, the filled offers resolved against me about ten times more often than the population average.
+
+**One candidate is still open, and I say so.** A narrower version of the same idea shows a small positive estimate on historical data. The live paper run has not confirmed it: about a third of the events the power calculation calls for, and every interval still contains zero. Per event, the noise is roughly nine times the size of the claimed edge. That needs hundreds of independent events, and no amount of enthusiasm shortens it.
+
+## The pattern in the failures
+
+Every failure was one component doing exactly what it was written to do, with the error living in the join between two of them. A risk cap counted orders where it should have counted the position. A calibration curve reported certainty from 56 samples. None of these was caught by a unit test.
+
+That changed how I work on everything else on this site. It is the reason the dealership assistant is evaluated end to end against a database, not only tested function by function, and the reason I check the measurement before I trust a score.

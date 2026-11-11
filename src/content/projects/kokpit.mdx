@@ -1,0 +1,126 @@
+---
+title: Kokpit
+sheet: A-101
+order: 1
+kind: room
+status: live
+summary: A platform that runs a car dealership from one vehicle record. One core, a separate installation for each dealership.
+lede: A platform that runs a car dealership from one vehicle record, from the moment a car arrives to the day it is sold. One core, a separate installation for each dealership.
+role: Product, architecture, specification, review and evaluation. Coding agents wrote the code.
+period: September 2026 to now
+stack: [TypeScript, Next.js 16, React 19, Postgres, Supabase, Tailwind 4, Python, Vercel, GitHub Actions]
+rooms: [desk, arrival, valuation]
+links:
+  - { label: See the demo dealership, href: 'https://demo.kokpit.hr/' }
+  - { label: kokpit.hr, href: 'https://kokpit.hr/' }
+  - { label: The first dealership, href: 'https://automobili-galerija.hr/' }
+figures:
+  - { v: '2', k: "dealerships running on one core: one real, one demo" }
+  - { v: '4 + 8 + 1', k: "apps, shared packages and one Python service" }
+  - { v: '11,965', k: "automated tests in 1,217 files" }
+  - { v: '88', k: "database migrations" }
+---
+import Figure from '../../components/Figure.astro';
+import Flow from '../../components/Flow.astro';
+import deskCars from '../../assets/kokpit/desk-cars.png';
+import phoneToday from '../../assets/kokpit/phone-today.jpg';
+import phoneCars from '../../assets/kokpit/phone-cars.jpg';
+import phoneStickers from '../../assets/kokpit/phone-stickers.jpg';
+import phoneAnchor from '../../assets/kokpit/phone-anchor.jpg';
+import fill from '../../assets/kokpit/thesis-ai-fill.png';
+import ValuationRun from '../../components/ValuationRun.astro';
+
+## What it is
+
+Kokpit is the back office and public website of a used-car dealership, built so that nothing is typed twice. A car is entered once. The public catalogue, the window sticker, the daily price list, the feeds for ad portals and the assistant all read that one record.
+
+It is made for the owners and staff of small dealerships, who mostly work standing up, on a phone, with one hand free. The admin opens on what needs doing today, not on a dashboard of charts.
+
+
+
+<div class="phones">
+  <Figure src={phoneToday} alt="Kokpit on a phone: the day's to-do list with urgent items marked, above the month's figures." caption="Today. What needs doing, most urgent first." size="phone" />
+  <Figure src={phoneCars} alt="Kokpit on a phone: the stock list with a photo, price, year and mileage for each car." caption="Stock. Every car carries its sticker state." size="phone" />
+  <Figure src={phoneStickers} alt="Kokpit on a phone: cars that still need a printed window sticker, each with two prices." caption="Stickers still to print." size="phone" />
+</div>
+
+<Figure src={deskCars} alt="Kokpit on a desktop: a sidebar of sections and the stock table with price, purchase price, sticker state, days on the lot and interest." caption="The same stock on a desktop, with purchase price, days on the lot and interest in the last week. This is the demo installation with invented data; the interface is in Croatian." size="text" />
+
+<figure class="film">
+  <video controls preload="none" poster="/media/kokpit-film-poster.jpg">
+    <source src="/media/kokpit-film.mp4" type="video/mp4" />
+    <track kind="captions" srclang="hr" label="Hrvatski" src="/media/kokpit-film.hr.vtt" default />
+  </video>
+  <figcaption>The 91-second product film I made for kokpit.hr. It is in Croatian: "From arrival to sale. Never easier."</figcaption>
+</figure>
+
+## Where it came from
+
+It began as the system I built for my father's dealership, [Automobili Galerija](/work/galerija/). By September 2026 that system did enough that a second dealership could plausibly use it, and the code had the first dealership's name baked into too many places. I stopped adding features and wrote an architecture document first: what is the core, what belongs to one dealership, and how does a change reach each installation safely. The existing code was imported with its full history and reshaped around that answer.
+
+## Intake: a car enters itself
+
+A dealer has three ways to start a record, and none of them is a blank form.
+
+- **Photograph the registration document.** A vision model reads it. Before the image leaves the server, the fields with personal data are masked; the output is then checked field by field against what a registration document can contain.
+- **Upload a vehicle history report.** A model extracts the fields through a forced tool call, and the make and model are validated against a catalogue before anything reaches the form.
+- **Pick the car from a catalogue** built from the European Environment Agency's public CO2 registration data.
+
+Photos come from the dealer's phone by scanning a QR code on the screen; there is no cable and no upload dialog.
+
+<Figure src={fill} alt="A dialog titled AI fill with a field for a PDF and a field for pasted text." caption="The first version of the fill dialog, from the Automobili Galerija admin. The model proposes; the dealer reviews the filled form before saving." size="text" />
+
+## Valuation: priced from the market
+
+The price a dealer puts on a car decides how long it stands on the lot. Kokpit proposes one from data, and deliberately keeps the language model out of the calculation:
+
+1. Comparable listings are gathered from the market every night.
+2. Each is scored for similarity to the car in question and weighted by how fresh it is.
+3. Outliers are trimmed, and a weighted median and range come out.
+4. Asking prices are calibrated toward selling prices, and a trade-in margin is worked out.
+
+The engine is backtested against the dealership's own past sales. A model can explain the result in words, but it never produces the number.
+
+Here is one run, exactly as the demo installation returned it.
+
+<ValuationRun />
+
+## Price history, kept by itself
+
+A Croatian consumer law that takes effect in November 2026 requires traders to show, next to every price, the price that applied on 10 September 2026, and to publish a daily price list. For a dealership that means stickers, ads and a price list that must never disagree.
+
+Kokpit records every price change with its date and derives the rest: the sticker on the windscreen, the line in each ad and the daily list all carry the same two numbers. When a price changes, the admin lists exactly which printed stickers are now out of date.
+
+<Figure src={phoneAnchor} alt="Kokpit on a phone: confirming the reference price of a car before the legal deadline, with a button to download the record as proof." caption="Confirming reference prices before the deadline, with a downloadable record as proof." size="phone" />
+
+## The platform: one core per dealership
+
+<Flow label="From one core to each dealership" caption="The same code reaches every dealership, and each keeps its own data." steps={[
+  { t: 'One core', who: 'Monorepo', d: 'One codebase for the site, the admin and the shared packages.' },
+  { t: 'Manifest', who: 'Per dealership', d: 'Name, brand and enabled modules, compiled in at build time.' },
+  { t: 'Prove', who: 'CI', d: 'Two tenants are built and scanned so no identity leaks between them.', gate: true },
+  { t: 'Install', who: 'Per dealership', d: 'Its own database and its own deployment.' },
+  { t: 'Watch', who: 'Every two hours', d: 'A fleet check visits every installation.' },
+]} />
+
+I chose isolation over a shared database. Each dealership gets its own Postgres project and its own deployment; a per-dealership manifest (name, brand, enabled modules) is compiled in at build time. A leak between two dealers would need a mistake in infrastructure, not just a missing filter in a query.
+
+- **One codebase** in a monorepo: the core app, the kokpit.hr site, a private console, the Showroom gateway, eight shared packages and a Python service.
+- **Releases in waves.** A change goes out to one group of installations at a time, not to all of them at once.
+- **Proof in CI.** Every commit builds two different tenants and scans the demo build to prove that nothing of the first dealership's identity appears in it.
+- **A fleet check** runs every two hours against every installation.
+
+The architecture was not my first idea. I had Claude propose one design and Codex argue against it, and the decision record keeps both positions and the reasons for the choice.
+
+## Guard rails
+
+- Row-level security in the database is the first line of defence, with a dedicated reviewer agent for changes that touch it.
+- Environment variables can be read in exactly one module; a lint rule rejects them anywhere else.
+- Scheduled jobs fail closed: without their secret they do nothing.
+- The migration runner refuses to write to a production database without a second, explicit confirmation.
+
+## Where it stands
+
+Kokpit runs one real dealership, my family's, every day, and a public demo dealership with invented data. It has not yet been run by a dealership outside the family; onboarding the first one is the next step, and I would rather say so than imply otherwise.
+
+[Showroom](/work/showroom/), the photo studio module, is built but not yet switched on in production.

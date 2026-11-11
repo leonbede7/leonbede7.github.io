@@ -1,0 +1,41 @@
+---
+import Arrow from './Arrow.astro';
+import { NAV, SITE } from '../data/site';
+---
+<header class="hd no-print">
+  <a class="hd__name lt" href="/">{SITE.name} <span aria-hidden="true">/</span> <span class="hd__role">{SITE.role}</span></a>
+  <nav class="hd__nav lt" aria-label="Sections">
+    {NAV.map((n) => <a href={n.href}>{n.label}</a>)}
+    <a href="/cv/">CV</a>
+  </nav>
+  <a class="cell cell--solid hd__go" href="/#contact">Arrange a visit <Arrow /></a>
+</header>
+
+<style>
+  .hd {
+    position: sticky; top: 0; z-index: 50;
+    height: var(--header-h);
+    display: flex; align-items: center; justify-content: space-between; gap: 1.5rem;
+    padding-inline: var(--gutter);
+    background: var(--ground);
+    border-bottom: var(--wall) solid var(--poche);
+  }
+  .hd { transition: background-color 0.9s var(--ease), color 0.9s var(--ease), border-color 0.9s var(--ease); }
+  :global(html[data-night]) .hd { background: var(--night); color: var(--night-ink); border-color: var(--night-ink); }
+  :global(html[data-night]) .hd__go { background: var(--sun); color: var(--poche); border-color: var(--sun); }
+  .hd__name { text-decoration: none; font-size: var(--step-0); font-weight: 800; white-space: nowrap; }
+  .hd__nav { display: flex; gap: clamp(1rem, 2.4vw, 2.2rem); font-size: var(--step-0); font-weight: 600; }
+  .hd__nav a { text-decoration: none; padding-block: 0.5em; position: relative; }
+  .hd__nav a::after {
+    content: ''; position: absolute; left: 0; right: 0; bottom: 0.2em; height: 0.34em; background: var(--sun);
+    transform: scaleX(0); transform-origin: left; transition: transform 0.35s var(--ease); z-index: -1;
+  }
+  .hd__nav a:hover::after, .hd__nav a:focus-visible::after { transform: scaleX(1); }
+  .hd__go { font-size: var(--step--1); padding-block: 0.72em 0.64em; }
+  @media (max-width: 62rem) {
+    .hd__role, .hd__name span[aria-hidden] { display: none; }
+  }
+  @media (max-width: 46rem) {
+    .hd__nav { display: none; }
+  }
+</style>

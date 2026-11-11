@@ -1,0 +1,43 @@
+---
+// Drag to compare the phone photo with the studio output.
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+
+interface Props { before: ImageMetadata; after: ImageMetadata; alt: string; caption?: string }
+const { before, after, alt, caption } = Astro.props;
+const id = `ba-${Math.random().toString(36).slice(2, 8)}`;
+---
+<figure class="ba">
+  <div class="ba__stage" data-ba style="--p:50%">
+    <Image class="ba__img" src={after} alt={`${alt}, studio output`} widths={[640, 1280]} sizes="(min-width: 80rem) 70rem, 94vw" loading="lazy" />
+    <Image class="ba__img ba__img--before" src={before} alt={`${alt}, phone photo from the lot`} widths={[640, 1280]} sizes="(min-width: 80rem) 70rem, 94vw" loading="lazy" />
+    <span class="ba__rule" aria-hidden="true"></span>
+    <span class="ba__lab ba__lab--l lt" aria-hidden="true">From the lot</span>
+    <span class="ba__lab ba__lab--r lt" aria-hidden="true">From Showroom</span>
+    <label class="vh" for={id}>Show more of the phone photo</label>
+    <input id={id} class="ba__range" type="range" min="0" max="100" value="50" />
+  </div>
+  {caption && <figcaption>{caption}</figcaption>}
+</figure>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-ba]').forEach((stage) => {
+    const range = stage.querySelector<HTMLInputElement>('input')!;
+    range.addEventListener('input', () => stage.style.setProperty('--p', `${range.value}%`));
+  });
+</script>
+
+<style>
+  .ba { margin-block: clamp(1.8rem, 4vw, 3rem); }
+  .ba__stage { position: relative; border: var(--wall) solid var(--poche); overflow: hidden; background: var(--shade); }
+  .ba__img { display: block; width: 100%; height: auto; }
+  .ba__img--before { position: absolute; inset: 0; height: 100%; object-fit: cover; clip-path: inset(0 calc(100% - var(--p)) 0 0); }
+  .ba__rule { position: absolute; top: 0; bottom: 0; left: var(--p); width: 4px; margin-left: -2px; background: var(--sun); box-shadow: 0 0 0 1px var(--poche); pointer-events: none; }
+  .ba__rule::after { content: ''; position: absolute; top: 50%; left: 50%; width: 2.6rem; height: 2.6rem; transform: translate(-50%, -50%); border-radius: 50%; background: var(--sun); border: var(--wall) solid var(--poche); }
+  .ba__lab { position: absolute; bottom: 0.7rem; font-size: var(--step--1); background: var(--poche); color: var(--ground); padding: 0.4em 0.7em 0.3em; pointer-events: none; }
+  .ba__lab--l { left: 0.7rem; }
+  .ba__lab--r { right: 0.7rem; }
+  .ba__range { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: ew-resize; margin: 0; }
+  .ba__stage:has(.ba__range:focus-visible) { outline: 3px solid var(--sun); outline-offset: 3px; box-shadow: 0 0 0 6px var(--poche); }
+  .ba figcaption { margin-top: 0.6rem; font-size: var(--step--1); color: var(--ink-2); max-width: 60ch; line-height: 1.4; }
+</style>

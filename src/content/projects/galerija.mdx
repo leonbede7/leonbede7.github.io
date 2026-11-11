@@ -1,0 +1,74 @@
+---
+title: Automobili Galerija
+sheet: A-104
+order: 4
+kind: room
+status: live
+summary: The live site and back office of my family's used-car dealership, and the origin of everything else here.
+lede: The live website and back office of my family's used-car dealership in Čepin. It is in daily use, it is where Kokpit came from, and it is the reason I know what a dealer actually needs.
+role: Owner of the problem and the product; specification, review and iteration. Coding agents wrote the code.
+period: November 2025 to September 2026, then continued as Kokpit
+stack: [TypeScript, Next.js, React, Supabase, Postgres, ONNX in WebAssembly, Playwright]
+rooms: [street, arrival]
+links:
+  - { label: Visit the live site, href: 'https://automobili-galerija.hr/' }
+  - { label: What it became, href: '/work/kokpit/' }
+figures:
+  - { v: '2014', k: "the year the dealership opened; I have worked in it since 2021" }
+  - { v: '207', k: "commits before it became a platform" }
+  - { v: '880', k: "automated tests, roughly, at that point" }
+  - { v: '12', k: "routes checked for accessibility on every commit" }
+---
+import Figure from '../../components/Figure.astro';
+import home from '../../assets/galerija/home.png';
+import catalog from '../../assets/galerija/catalog.png';
+import car from '../../assets/galerija/car.png';
+import sticker from '../../assets/galerija/sticker.png';
+
+## Why I built it
+
+My father has sold used cars in Čepin, near Osijek, since 2014. I grew up around the lot and have worked in the business since 2021. What I saw was the same facts about the same car being typed again and again: into a spreadsheet, into each ad portal's form, onto a sheet of paper for the windscreen, and once more into a reply to a buyer.
+
+As a computing student I could see that coding agents had become good enough to build real software. I had a business that needed it and I knew exactly what it should do.
+
+<Figure src={home} alt="Home page of automobili-galerija.hr with a featured car and the dealership's promise of verified history." caption="The public site. The dealership's promise is a history you can check, so every car page leads with its documents." />
+
+## The public side
+
+A buyer gets a catalogue that loads fast and answers the questions people actually ask before they drive out to look at a car.
+
+- Search and filters, side-by-side comparison and saved cars.
+- A page per car with full specification, photographs and the price.
+- A trade-in form, a financing calculator and an import-cost calculator.
+- Structured data for search engines and pages rendered ahead of time.
+
+<div class="duo">
+  <Figure src={catalog} alt="Catalogue page with a grid of cars, each with price, year and mileage." caption="The catalogue." size="text" />
+  <Figure src={car} alt="A single car's page with photographs, price and specification." caption="A car's page." size="text" />
+</div>
+
+## The back office
+
+Behind a login, one vehicle record feeds everything a dealer does with a car.
+
+- **Inquiries and trade-ins** arrive as records with a response-time target and a push notification, not as emails to lose.
+- **Offers** are numbered PDFs with a frozen copy of the car's data at the moment they were issued.
+- **Window stickers** print from the record, with a QR code back to the car's page.
+- **Ad portals** receive feeds built to each one's specification: Njuškalo, Index Oglasi, Čačkalo, and the Facebook and Google catalogues.
+- **An assistant**, in its first version, answered questions about stock and prepared changes for confirmation. It grew into [the one in Kokpit](/work/assistant/).
+
+<Figure src={sticker} alt="Window sticker preview for a VW Golf 7 with price, year, mileage, power and equipment list." caption="A window sticker, generated from the record. The QR code leads to the same car on the public site." size="text" />
+
+## Cutting a car out of its background, in the browser
+
+Before Showroom there was a simpler tool: remove the background of a car photograph without sending the photograph anywhere. It runs a 44 MB segmentation model inside the browser through WebAssembly, followed by my own clean-up of the mask for the ground line and the shadow under the car.
+
+I chose the model by measuring, not by reputation. Against reference masks, the one I kept raised agreement along the edges of the car from 0.874 to 0.974 and cut disagreement with the reference from 12.6% to 2.6%.
+
+## What it taught me
+
+- **Where the boundary goes.** Public pages and staff workflows are separate applications in all but name. Deciding what each role can see came before any screen.
+- **A model's output is a candidate.** Extracted data and drafted replies are reviewed by a person before they become a record or a sent message.
+- **What I cannot claim.** I have no measured figure for time saved or cars sold faster, so there is none on this page. The feeds are built to each portal's specification; whether a portal ingests them depends on onboarding with that portal.
+
+The system is also the subject of my undergraduate thesis at FERIT Osijek.

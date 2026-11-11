@@ -1,0 +1,44 @@
+---
+// A numbered run of steps, drawn like a wall detail: what happens, in order, and who does it.
+interface Step { t: string; who?: string; d: string; gate?: boolean }
+interface Props { steps: Step[]; label: string; caption?: string }
+const { steps, label, caption } = Astro.props;
+---
+<figure class="flow">
+  <ol aria-label={label} style={`--n:${steps.length}`}>
+    {steps.map((s, i) => (
+      <li class:list={{ 'is-gate': s.gate }}>
+        <span class="tag">{i + 1}</span>
+        <b class="title">{s.t}</b>
+        {s.who && <span class="flow__who lt">{s.who}</span>}
+        <span class="flow__d">{s.d}</span>
+      </li>
+    ))}
+  </ol>
+  {caption && <figcaption>{caption}</figcaption>}
+</figure>
+
+<style>
+  .flow { margin-block: clamp(1.8rem, 4vw, 3rem); }
+  .flow ol { display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); border: var(--wall) solid var(--poche); margin: 0; gap: 0; }
+  .flow li { padding: 0.9rem 0.9rem 1rem; display: grid; gap: 0.3rem; align-content: start; position: relative; }
+  .flow li + li { border-left: var(--wall) solid var(--poche); }
+  .flow li::before { display: none; }
+  .flow li + li::after {
+    content: ''; position: absolute; left: -0.62rem; top: 1.25rem; width: 1.1rem; height: 1.1rem;
+    background: var(--ground); border-top: var(--wall) solid var(--poche); border-right: var(--wall) solid var(--poche);
+    transform: rotate(45deg) scale(0.62);
+  }
+  .flow li.is-gate { background: var(--sun); }
+  .flow .tag { font-size: 0.8rem; background: var(--ground); }
+  .flow b { font-size: var(--step-1); margin-top: 0.35rem; }
+  .flow__who { font-size: 0.78rem; color: var(--ink-2); }
+  .flow li.is-gate .flow__who { color: var(--poche); }
+  .flow__d { font-size: var(--step--1); line-height: 1.4; }
+  .flow figcaption { margin-top: 0.6rem; font-size: var(--step--1); color: var(--ink-2); max-width: 60ch; line-height: 1.4; }
+  @media (max-width: 56rem) {
+    .flow ol { grid-template-columns: 1fr; }
+    .flow li + li { border-left: 0; border-top: var(--wall) solid var(--poche); }
+    .flow li + li::after { left: 1.3rem; top: -0.62rem; transform: rotate(135deg) scale(0.62); }
+  }
+</style>

@@ -1,0 +1,25 @@
+---
+// A framed plate: a real screenshot or render with its caption.
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+
+interface Props { src: ImageMetadata; alt: string; caption?: string; size?: 'wide' | 'text' | 'phone'; frame?: boolean; ground?: 'light' | 'dark' }
+const { src, alt, caption, size = 'wide', frame = true, ground = 'light' } = Astro.props;
+const sizes = { wide: '(min-width: 62rem) 60rem, 94vw', text: '(min-width: 62rem) 44rem, 94vw', phone: '(min-width: 62rem) 20rem, 92vw' }[size];
+const widths = (size === 'phone' ? [390, 673] : [640, 800, 960, 1280, 1920]).filter((w) => w <= src.width * 1.01);
+if (widths.length === 0) widths.push(src.width);
+---
+<figure class:list={['plate', `plate--${size}`, { 'plate--bare': !frame, 'plate--dark': ground === 'dark' }]}>
+  <Image src={src} alt={alt} widths={widths} sizes={sizes} loading="lazy" decoding="async" />
+  {caption && <figcaption>{caption}</figcaption>}
+</figure>
+
+<style>
+  .plate { margin-block: clamp(1.8rem, 4vw, 3rem); }
+  .plate :global(img) { width: 100%; height: auto; border: var(--wall) solid var(--poche); background: #fff; }
+  .plate--bare :global(img) { border: 0; }
+  .plate--dark :global(img) { background: var(--poche); }
+  .plate--text { max-width: 44rem; }
+  .plate--phone { max-width: 26rem; }
+  .plate figcaption { margin-top: 0.6rem; font-size: var(--step--1); color: var(--ink-2); max-width: 60ch; line-height: 1.4; }
+</style>

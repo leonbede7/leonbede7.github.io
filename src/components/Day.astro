@@ -1,0 +1,375 @@
+---
+// The first screen and the pinned day sequence. Without JavaScript or with reduced motion it is a plain list.
+import Arrow from './Arrow.astro';
+import Section from './Section.astro';
+import { HERO_TIME, STATUS_LABEL, STOPS } from '../data/stops';
+import { ROOM_ROWS } from '../data/rooms';
+import { FACTS } from '../data/site';
+
+const states = [
+  { id: 'hero', time: HERO_TIME, clock: '07:00', caption: STOPS[0]!.caption, room: STOPS[0]!.room },
+  ...STOPS.map((s) => ({ id: s.id, time: s.time, clock: s.clock, caption: s.caption, room: s.room })),
+];
+---
+<section class="day" id="day" data-day data-stop="hero" data-states={JSON.stringify(states)} style={`--n:${STOPS.length}`}>
+  <div class="day__pin">
+    <div class="day__hero" data-panel="hero">
+      <h1 class="title">A day inside <span class="lit">the systems</span> I build.</h1>
+      <p class="day__intro">I’m Leon, an AI product engineer. Follow the light through the building: every room is a product I designed and shipped by directing fleets of coding agents.</p>
+      <p class="day__proof"><b class="lt">Two dealerships</b> run on it today, one real and one demo. Its assistant passed <b class="lt tnum">{FACTS.evalPass}</b> evaluation cases before release.</p>
+      <ol class="day__legend lt" aria-label="Rooms in the drawing">
+        {ROOM_ROWS.slice(0, 7).map((r) => <li><span class="tag">{r.n}</span>{r.name}</li>)}
+      </ol>
+      <p class="day__skip lt no-print"><a href="#rooms">Skip to the project list</a></p>
+    </div>
+
+    <ol class="day__stops">
+      {STOPS.map((s) => (
+        <li class="panel" data-panel={s.id} id={`stop-${s.id}`} tabindex="-1">
+          <h2 class="panel__title title"><span class="tag tag--on">{s.tag}</span>{" "}<span><span class="panel__clock tnum">{s.clock}{" "}</span>{s.title}</span></h2>
+          <p class="panel__happens">{s.happens}</p>
+          <ul class="panel__built">{s.built.map((b) => <li>{b}</li>)}</ul>
+          <p class="panel__skills lt"><span class="vh">Skills: </span>{s.skills.join(' · ')}</p>
+          <p class="panel__foot">
+            <span class="status" data-status={s.status}>{STATUS_LABEL[s.status]}</span>
+            <a class="cell" href={s.link.href}>{s.link.label} <Arrow /></a>
+          </p>
+        </li>
+      ))}
+    </ol>
+
+    <div class="day__clock" aria-live="off">
+      <b class="tnum" data-clock>07:00</b>
+      <span class="lt" data-caption>{STOPS[0]!.caption}</span>
+    </div>
+
+    <figure class="day__drawing">
+      <Section time={HERO_TIME} active={STOPS[0]!.room} />
+      <figcaption class="lt">Section A–A <span aria-hidden="true">/</span> a working car dealership <span aria-hidden="true">/</span> every room is a product</figcaption>
+    </figure>
+
+    <ol class="day__line lt no-print" aria-label="Times of day">
+      {STOPS.map((s) => (
+        <li><button type="button" data-goto={s.id} class="tnum">{s.clock}</button></li>
+      ))}
+    </ol>
+  </div>
+</section>
+
+<script>
+  import { APERTURES } from '../lib/building';
+  import { beamPath, beams, landing, litRooms, sunPosition, wallLanding } from '../lib/sun';
+  import { ROOMS } from '../lib/building';
+
+  interface State { id: string; time: number; clock: string; caption: string; room: string | null }
+
+  const day = document.querySelector<HTMLElement>('[data-day]');
+  if (day) {
+    const svg = day.querySelector<SVGSVGElement>('[data-section]')!;
+    const states: State[] = JSON.parse(day.dataset.states!);
+    const N = states.length - 1;
+    const clock = day.querySelector<HTMLElement>('[data-clock]')!;
+    const caption = day.querySelector<HTMLElement>('[data-caption]')!;
+    const panels = [...day.querySelectorAll<HTMLElement>('[data-panel]')];
+    const buttons = [...day.querySelectorAll<HTMLButtonElement>('[data-goto]')];
+    const beamEls = new Map(APERTURES.map((a) => [a.id, svg.querySelector<SVGPathElement>(`[data-beam="${a.id}"]`)!]));
+    const landEls = new Map(APERTURES.map((a) => [a.id, svg.querySelector<SVGRectElement>(`[data-land="${a.id}"]`)!]));
+    const wallEls = new Map(APERTURES.map((a) => [a.id, svg.querySelector<SVGRectElement>(`[data-wall="${a.id}"]`)!]));
+    let activeRoom: string | null = states[0]!.room;
+    const roomEls = [...svg.querySelectorAll<SVGRectElement>('.sec__rooms .rm')];
+    const tagEls = [...svg.querySelectorAll<SVGGElement>('.sec__tags .tg')];
+    const sunEl = svg.querySelector<SVGGElement>('[data-sun]');
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+    const fmt = (t: number) => {
+      const m = Math.round((t * 60) / 5) * 5;
+      return `${String(Math.floor(m / 60) % 24).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+    };
+
+    function paint(t: number) {
+      const now = beams(t);
+      const shafts = new Map(now.map((b) => [b.aperture, beamPath(b)]));
+      beamEls.forEach((el, id) => el.setAttribute('d', shafts.get(id) ?? ''));
+      const lands = new Map(now.map((b) => [b.aperture, b.room === activeRoom ? landing(b) : null]));
+      landEls.forEach((el, id) => {
+        const l = lands.get(id);
+        el.style.display = l ? '' : 'none';
+        if (l) { el.setAttribute('x', String(l.x0)); el.setAttribute('y', String(l.y - 7)); el.setAttribute('width', String(l.x1 - l.x0)); }
+      });
+      const ends = new Map(now.map((b) => [b.aperture, b.room === activeRoom ? { w: wallLanding(b), room: b.room } : null]));
+      wallEls.forEach((el, id) => {
+        const e = ends.get(id);
+        const w = e?.w;
+        el.style.display = w ? '' : 'none';
+        if (w && e) {
+          const left = w.x <= ROOMS[e.room].x0 + 0.6;
+          el.setAttribute('x', String(left ? w.x : w.x - 7)); el.setAttribute('y', String(w.y0)); el.setAttribute('height', String(w.y1 - w.y0));
+        }
+      });
+      const lit = new Set<string>(litRooms(t));
+      roomEls.forEach((el) => el.classList.toggle('is-lit', lit.has(el.dataset.room!)));
+      const s = sunPosition(t);
+      if (sunEl) {
+        if (s) sunEl.setAttribute('transform', `translate(${s.x.toFixed(1)} ${s.y.toFixed(1)})`);
+        sunEl.style.opacity = s ? '1' : '0';
+      }
+    }
+
+    let active = -1;
+    function setStop(i: number) {
+      if (i === active) return;
+      active = i;
+      const st = states[i]!;
+      activeRoom = st.room;
+      day!.dataset.stop = st.id;
+      svg.dataset.stop = st.id;
+      panels.forEach((p) => {
+        const on = p.dataset.panel === st.id;
+        p.classList.toggle('is-active', on);
+        if (day!.classList.contains('is-pinned')) p.toggleAttribute('inert', !on);
+      });
+      tagEls.forEach((g) => g.classList.toggle('is-active', g.dataset.tag === st.room));
+      beamEls.forEach((el) => el.classList.toggle('is-active', el.dataset.room === st.room));
+      document.documentElement.toggleAttribute('data-night', st.id === 'night' && day!.classList.contains('is-pinned'));
+      buttons.forEach((b) => (b.dataset.goto === st.id ? b.setAttribute('aria-current', 'step') : b.removeAttribute('aria-current')));
+      caption.textContent = st.caption;
+    }
+
+    const ease = (x: number) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
+    let shown = states[0]!.time;
+    let target = shown;
+    let raf = 0;
+
+    function frame() {
+      raf = 0;
+      shown += (target - shown) * 0.16;
+      if (Math.abs(target - shown) < 0.004) shown = target;
+      paint(shown);
+      clock.textContent = fmt(shown);
+      if (shown !== target) raf = requestAnimationFrame(frame);
+    }
+    const kick = () => { if (!raf) raf = requestAnimationFrame(frame); };
+
+    function onScroll() {
+      const rect = day!.getBoundingClientRect();
+      const span = day!.offsetHeight - window.innerHeight;
+      const p = Math.min(1, Math.max(0, -rect.top / Math.max(1, span)));
+      const f = p * N;
+      const i = Math.min(N - 1, Math.floor(f));
+      const frac = f - i;
+      const k = frac < 0.3 ? 0 : frac > 0.8 ? 1 : ease((frac - 0.3) / 0.5);
+      const a = states[i]!, b = states[i + 1]!;
+      target = a.time + (b.time - a.time) * k;
+      setStop(frac < 0.55 ? i : i + 1);
+      kick();
+    }
+
+    function goto(id: string, viaKeyboard = false) {
+      const i = states.findIndex((s) => s.id === id);
+      if (i < 0) return;
+      if (day!.classList.contains('is-pinned')) {
+        const span = day!.offsetHeight - window.innerHeight;
+        const top = day!.getBoundingClientRect().top + window.scrollY;
+        window.scrollTo({ top: top + (i / N) * span + 2, behavior: 'instant' });
+        onScroll();
+        if (viaKeyboard) document.getElementById(`stop-${id}`)?.focus({ preventScroll: true });
+      } else {
+        setStop(i);
+        shown = target = states[i]!.time;
+        paint(shown);
+        clock.textContent = states[i]!.clock;
+        document.getElementById(`stop-${id}`)?.focus({ preventScroll: true });
+      }
+    }
+    buttons.forEach((b) => b.addEventListener('click', (e) => goto(b.dataset.goto!, e.detail === 0)));
+
+    const textArea = day.querySelector<HTMLElement>('.day__stops')!;
+    const heroEl = day.querySelector<HTMLElement>('.day__hero')!;
+    /** The pinned view is only used when the tallest panel fits the space it is given. */
+    function fits() {
+      const room = textArea.clientHeight;
+      const need = Math.max(heroEl.scrollHeight, ...panels.map((p) => p.scrollHeight));
+      return need <= room + 2;
+    }
+
+    /** Should the day be pinned? Measured with the pinned layout applied, without leaving it applied. */
+    function wantsPin(measure: boolean) {
+      if (reduce.matches || window.innerHeight < 600) return false;
+      // Before the fonts have loaded a measurement would be wrong, so the first pass trusts the layout.
+      if (!measure) return true;
+      const was = day!.classList.contains('is-pinned');
+      if (!was) day!.classList.add('is-pinned');
+      const ok = fits();
+      if (!was) day!.classList.remove('is-pinned');
+      return ok;
+    }
+
+    let mode: boolean | null = null;
+    function arrange(measure = true) {
+      const pin = wantsPin(measure);
+      if (pin === mode) { if (pin) onScroll(); return; }
+      // Keep a reader who is already below the day where they are while its height changes.
+      const below = mode !== null && day!.getBoundingClientRect().bottom < window.innerHeight * 0.5;
+      const before = day!.getBoundingClientRect().bottom;
+      mode = pin;
+      day!.classList.toggle('is-pinned', pin);
+      if (below) window.scrollBy({ top: day!.getBoundingClientRect().bottom - before, behavior: 'instant' });
+      if (!pin) document.documentElement.removeAttribute('data-night');
+      panels.forEach((p) => p.removeAttribute('inert'));
+      active = -1;
+      if (pin) {
+        window.addEventListener('scroll', onScroll, { passive: true });
+        onScroll();
+      } else {
+        window.removeEventListener('scroll', onScroll);
+        setStop(0);
+        shown = target = states[0]!.time;
+        paint(shown);
+        clock.textContent = states[0]!.clock;
+      }
+    }
+    reduce.addEventListener('change', () => arrange());
+    let timer = 0;
+    window.addEventListener('resize', () => { window.clearTimeout(timer); timer = window.setTimeout(() => arrange(), 160); }, { passive: true });
+    document.fonts?.ready.then(() => arrange());
+    arrange(false);
+  }
+</script>
+
+<style>
+  .day { --pin-h: calc(100svh - var(--header-h)); position: relative; overflow-x: clip; transition: background-color 0.9s var(--ease), color 0.9s var(--ease); }
+  .day__pin {
+    display: grid; gap: 0 clamp(1.5rem, 3vw, 3.5rem);
+    grid-template-columns: minmax(19rem, 31%) minmax(0, 1fr);
+    grid-template-areas: 'hero drawing' 'clock drawing' 'stops stops';
+    align-items: start;
+    padding: clamp(1.2rem, 3vh, 2.6rem) var(--gutter) 0;
+    max-width: 104rem; margin-inline: auto;
+  }
+  .day__hero { grid-area: hero; }
+  .day__hero h1 { font-size: min(var(--step-4), 9.4vh + 0.3rem); margin-bottom: 0.3em; }
+  .day__intro { font-size: min(var(--step-1), 2.35vh + 0.3rem); line-height: 1.4; max-width: 24em; font-weight: 500; }
+  .day__proof { margin-top: 1rem; font-size: min(var(--step-0), 2vh + 0.3rem); line-height: 1.42; max-width: 30em; font-weight: 500; border-top: 1px solid var(--rule); padding-top: 0.8rem; }
+  .day__proof b { font-size: 1.12em; letter-spacing: 0.03em; }
+  .day__legend { display: none; }
+  .day__skip { margin-top: 1.1rem; font-size: var(--step--1); }
+
+  .day__clock { grid-area: clock; align-self: end; border-top: var(--wall) solid currentColor; padding-top: 0.7rem; margin-top: 2rem; display: grid; gap: 0.2rem; }
+  .day__clock b { font-family: var(--letter); font-weight: 850; font-size: min(var(--step-4), 8.4vh); line-height: 0.86; letter-spacing: 0.01em; }
+  .day__clock span { font-size: var(--step-0); }
+
+  .day__drawing { grid-area: drawing; align-self: center; min-width: 0; }
+  .day__drawing figcaption { margin-top: 0.4rem; font-size: var(--step--1); color: var(--ink-2); font-weight: 600; }
+
+  .day__line { display: none; }
+
+  /* Plain list: no JavaScript, or reduced motion. */
+  .day__stops { grid-area: stops; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 21rem), 1fr)); gap: 2.6rem clamp(1.5rem, 3vw, 3rem); margin-top: clamp(2.5rem, 6vw, 5rem); padding-top: 2rem; border-top: var(--wall) solid currentColor; }
+  .panel__clock { margin-right: 0.4em; }
+  .panel__title { font-size: var(--step-2); display: flex; gap: 0.5em; align-items: flex-start; margin: 0.3rem 0 0.7rem; }
+  .panel__title .tag { font-size: 0.5em; margin-top: 0.12em; }
+  .panel__happens { font-size: var(--step-0); line-height: 1.46; font-weight: 500; max-width: 34em; }
+  .panel__built { margin-top: 0.9rem; display: grid; gap: 0.55rem; font-size: var(--step--1); line-height: 1.45; max-width: 36em; }
+  .panel__built li { padding-left: 1.3em; position: relative; }
+  .panel__built li::before { content: ''; position: absolute; left: 0; top: 0.62em; width: 0.72em; border-top: var(--wall) solid currentColor; }
+  .panel__skills { margin-top: 1rem; font-size: var(--step--1); line-height: 1.5; font-weight: 700; }
+  .panel__foot { margin-top: 1.1rem; display: flex; flex-wrap: wrap; align-items: center; gap: 0.8rem 1.2rem; }
+  .panel__foot .cell { font-size: var(--step--1); }
+
+  /* Pinned sequence. */
+  .day.is-pinned { height: calc(var(--pin-h) + var(--n) * 72vh); }
+  .day.is-pinned .day__pin {
+    position: sticky; top: var(--header-h); height: var(--pin-h);
+    grid-template-rows: minmax(0, 1fr) auto auto;
+    grid-template-areas: 'text drawing' 'clock drawing' 'clock line';
+    padding-bottom: clamp(0.8rem, 2.4vh, 1.8rem);
+    align-items: stretch;
+  }
+  .day.is-pinned .day__hero, .day.is-pinned .day__stops { grid-area: text; }
+  .day.is-pinned .day__stops { display: block; margin: 0; padding: 0; border: 0; position: relative; min-height: 0; }
+  .day.is-pinned .panel, .day.is-pinned .day__hero {
+    opacity: 0; visibility: hidden; transform: translateY(0.9rem);
+    transition: opacity 0.35s var(--ease), transform 0.5s var(--ease), visibility 0s linear 0.35s;
+  }
+  .day.is-pinned .panel { position: absolute; inset: 0 0 auto 0; }
+  .day.is-pinned .panel__clock { display: none; }
+  .day.is-pinned .panel:focus-visible { outline-offset: 6px; }
+  .day.is-pinned .is-active { opacity: 1; visibility: visible; transform: none; transition-delay: 0.12s, 0.12s, 0s; }
+  .day.is-pinned .day__drawing { display: grid; align-content: center; }
+  .day.is-pinned .day__drawing :global(.sec) { max-height: calc(var(--pin-h) - 7.5rem); }
+  .day.is-pinned .day__clock { margin-top: 0; }
+  .day.is-pinned .day__line {
+    grid-area: line; display: flex; justify-content: space-between; gap: 0.2rem;
+    border-top: var(--wall) solid currentColor; margin-top: 0.6rem;
+  }
+  .day__line button {
+    font: inherit; font-size: var(--step--1); color: inherit; background: none; border: 0; cursor: pointer;
+    padding: 0.7em 0.5em 0.4em; position: relative;
+  }
+  .day__line button::before { content: ''; position: absolute; left: 50%; top: -1px; width: var(--wall); height: 0.5em; background: currentColor; }
+  .day__line button:hover { background: var(--sun); color: var(--poche); }
+  .day__line button[aria-current] { background: currentColor; }
+  .day__line button[aria-current] { color: var(--ground); background: var(--poche); }
+
+  .day[data-stop='night'] { background: var(--night); color: var(--night-ink); }
+  .day[data-stop='night'] .day__drawing figcaption { color: #a8a9a6; }
+  .day[data-stop='night'] .panel .tag--on { background: var(--sun); color: var(--poche); border-color: var(--sun); }
+  .day[data-stop='night'] .panel .cell { color: var(--night-ink); border-color: var(--night-ink); }
+  .day[data-stop='night'] .panel .cell:hover { color: var(--poche); }
+  .day[data-stop='night'] .status::before { border-color: var(--night-ink); }
+  .day[data-stop='night'] .day__line button[aria-current] { background: var(--sun); color: var(--poche); }
+
+  /* Short laptop screens: keep every panel clear of the clock. */
+  @media (min-width: 56.01rem) and (max-height: 52rem) {
+    .day.is-pinned .panel__title { font-size: var(--step-1); }
+    .day.is-pinned .panel__built li:nth-child(n + 3) { display: none; }
+    .day.is-pinned .panel__happens { font-size: var(--step--1); }
+    .day.is-pinned .panel__built, .day.is-pinned .panel__skills { font-size: 0.8rem; }
+    .day.is-pinned .day__skip { display: none; }
+    .day.is-pinned .day__hero h1 { font-size: min(var(--step-4), 8.2vh + 0.2rem); }
+    .day.is-pinned .day__intro { font-size: min(var(--step-1), 2.1vh + 0.3rem); }
+    .day.is-pinned .day__proof { font-size: var(--step--1); margin-top: 0.7rem; padding-top: 0.6rem; }
+  }
+  @media (min-width: 56.01rem) and (max-height: 44rem) {
+    .day.is-pinned .panel__skills { display: none; }
+  }
+
+  /* Shorter phones: the legend goes and each panel keeps one built line, so the pinned view still fits. */
+  @media (max-width: 56rem) and (max-height: 50rem) {
+    .day.is-pinned .day__legend { display: none !important; }
+    .day.is-pinned .panel__built li:nth-child(n + 2) { display: none; }
+    .day.is-pinned .day__drawing :global(.sec) { max-height: 34svh !important; }
+  }
+
+  @media (max-width: 56rem) {
+    .day__pin { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'hero' 'drawing' 'clock' 'stops'; }
+    .day__drawing { margin-top: 1.4rem; }
+    .day__clock { margin-top: 1rem; grid-template-columns: auto 1fr; align-items: end; gap: 0.9rem; }
+    .day__clock b { font-size: var(--step-3); }
+    .day__clock span { font-size: var(--step--1); padding-bottom: 0.2em; }
+    .day.is-pinned .day__pin {
+      grid-template-rows: auto auto auto minmax(0, 1fr);
+      grid-template-areas: 'drawing' 'line' 'clock' 'text';
+      padding-top: 0.6rem;
+    }
+    .day.is-pinned .day__drawing { margin-top: 0; }
+    .day.is-pinned .day__drawing :global(.sec) { max-height: 38svh; }
+    .day.is-pinned .day__drawing figcaption { display: none; }
+    .day.is-pinned .day__line { margin-top: 0.2rem; border-top: 0; border-bottom: var(--wall) solid currentColor; overflow-x: auto; }
+    .day.is-pinned .day__line button { padding: 0.5em 0.35em; font-size: 0.8rem; }
+    .day.is-pinned .day__line button::before { display: none; }
+    .day.is-pinned .day__clock { border-top: 0; padding-top: 0.5rem; }
+    .day.is-pinned .day__hero, .day.is-pinned .day__stops { margin-top: 0.7rem; }
+    .day.is-pinned .day__hero h1 { font-size: var(--step-3); }
+    .day.is-pinned .day__intro { font-size: var(--step-0); }
+    .day.is-pinned .day__legend { display: grid; grid-template-columns: 1fr 1fr; gap: 0.45rem 1rem; margin-top: 1rem; font-size: 0.86rem; }
+    .day.is-pinned .day__legend li { display: flex; align-items: center; gap: 0.5em; }
+    .day.is-pinned .day__legend .tag { font-size: 0.74rem; }
+    .day.is-pinned .day__proof { margin-top: 0.8rem; }
+    .day.is-pinned .day__skip { display: none; }
+    .day.is-pinned .day__proof { font-size: var(--step--1); }
+    .day.is-pinned .panel__title { font-size: var(--step-1); }
+    .day.is-pinned .panel__built li:nth-child(n + 3) { display: none; }
+    .day.is-pinned .panel__skills { display: none; }
+  }
+</style>

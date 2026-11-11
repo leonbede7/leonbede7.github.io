@@ -1,0 +1,57 @@
+---
+// Small street elevations for the projects that are not rooms of the dealership.
+interface Props { kind: 'lab' | 'observatory' | 'pavilion' | 'site' | 'dealership'; label: string }
+const { kind, label } = Astro.props;
+const board = Array.from({ length: 10 }, (_, i) => i);
+---
+<svg class="elev" viewBox="0 0 240 190" role="img" aria-label={label}>
+  {kind === 'lab' && (
+    <g>
+      <path class="ln fl" d="M28 170V92H212V170" /><path class="pc" d="M22 84H218V94H22Z" />
+      {[0, 1, 2, 3, 4].map((c) => [0, 1].map((r) => <rect class:list={['ln', (c + r) % 2 ? 'fl' : 'on']} x={46 + c * 26} y={106 + r * 22} width="18" height="14" />))}
+      <path class="ln fl" d="M184 170V132H202V170" /><path class="ln" d="M60 84V62H84V84M66 62V50" />
+    </g>
+  )}
+  {kind === 'observatory' && (
+    <g>
+      <path class="ln fl" d="M60 170V116H180V170" /><path class="pc" d="M52 108H188V118H52Z" />
+      <path class="ln fl" d="M68 108A52 52 0 0 1 172 108Z" /><path class="on" d="M120 56L146 108H128Z" />
+      <path class="ln" d="M132 84L166 40" /><circle class="ln fl" cx="170" cy="35" r="7" />
+      <path class="ln fl" d="M108 170V138H132V170" /><path class="ln thin" d="M76 134H96M76 146H96M144 134H164M144 146H164" />
+    </g>
+  )}
+  {kind === 'pavilion' && (
+    <g>
+      <path class="ln fl" d="M92 156V78H148V156" /><path class="pc" d="M84 48H98V62H113V48H127V62H142V48H156V80H84Z" />
+      <path class="pc" d="M76 156H164V170H76Z" /><path class="ln fl" d="M110 156V118A10 10 0 0 1 130 118V156" />
+      <path class="ln thin" d="M100 96H140" />
+      {board.map((i) => <rect class={i % 2 ? 'on' : 'pc'} x={20 + i * 20} y="170" width="20" height="9" />)}
+    </g>
+  )}
+  {kind === 'site' && (
+    <g>
+      <path class="ln dash" d="M56 170V88H176V170M56 128H176M116 88V170" />
+      <path class="ln thin" d="M44 170V70M84 170V70M124 170V70M164 170V70M188 170V70M40 100H192M40 136H192M44 136L84 100M124 136L164 100M84 136L124 100" />
+      <path class="ln" d="M208 170V28M150 36H232M208 28L176 36M208 28L232 36M166 36V64" /><rect class="on" x="158" y="64" width="16" height="12" />
+      <path class="pc" d="M198 166H218V170H198Z" />
+    </g>
+  )}
+  {kind === 'dealership' && (
+    <g>
+      <path class="pc" d="M20 62H220V70H20ZM20 70H28V170H20ZM212 70H220V170H212ZM20 112H220V118H20ZM92 70H97V112H92ZM138 70H143V170H138ZM176 70H181V170H176Z" />
+      <path class="on" d="M28 118V170H78Z" /><path class="on" d="M143 70H176V170H143Z" opacity=".001" />
+    </g>
+  )}
+  <path class="gl" d="M0 171H240" />
+</svg>
+
+<style>
+  .elev { width: 100%; height: auto; color: var(--poche); overflow: visible; }
+  .elev .ln { fill: none; stroke: currentColor; stroke-width: 2.3; stroke-linejoin: miter; }
+  .elev .ln.thin { stroke-width: 1.2; }
+  .elev .ln.fl { fill: var(--ground); }
+  .elev .ln.dash { stroke-dasharray: 6 5; }
+  .elev .on { fill: var(--sun); stroke: currentColor; stroke-width: 2.3; }
+  .elev .pc { fill: currentColor; }
+  .elev .gl { stroke: currentColor; stroke-width: 3.4; fill: none; }
+</style>

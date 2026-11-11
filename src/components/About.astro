@@ -1,0 +1,42 @@
+---
+import Arrow from './Arrow.astro';
+import { SITE } from '../data/site';
+---
+<section id="about" class="about wrap">
+  <h2 class="title">The person who drew it</h2>
+  <div class="about__body">
+    <div class="about__text">
+      <p class="about__lede">I’m Leon Bede. I grew up around my father’s used-car dealership in Čepin, near Osijek, and I study computing at FERIT Osijek.</p>
+      <p>The dealership is where I learned how much of a small business is the same facts typed again: once for the stock list, once for each ad portal, once on the window sticker, once more in the reply to a buyer. When coding agents became good enough to build real software, I had a business that needed it and knew exactly what it should do.</p>
+      <p>So I built it. First the dealership’s own site and back office, which has been in daily use since. Then the same system turned into Kokpit, a platform another dealership can run with its own data and brand. Along the way I learned the parts no agent hands you: where the access boundary goes, what has to be measured before you can trust a model, and when to say a thing is not finished.</p>
+      <p>I’m looking for a remote team where that mix is useful: someone who understands the business problem, can direct agents to build the answer, and will not ship it until it has been checked.</p>
+      <p class="about__go no-print"><a class="cell" href="/cv/">Open the CV <Arrow /></a></p>
+    </div>
+
+    <dl class="about__facts">
+      <div><dt class="lt">Now</dt><dd>{SITE.availability}. {SITE.eligibility}.</dd></div>
+      <div><dt class="lt">Based</dt><dd>{SITE.location}</dd></div>
+      <div><dt class="lt">Experience</dt><dd>Automobili Galerija, business operations and AI product development, 2021 to present<br />Hrvatski Telekom, sales and customer service agent, summer 2024</dd></div>
+      <div><dt class="lt">Education</dt><dd>FERIT Osijek, undergraduate Computing, Software Engineering track, in progress</dd></div>
+      <div><dt class="lt">Languages</dt><dd>Croatian, native. English, working proficiency.</dd></div>
+      <div><dt class="lt">Away from the desk</dt><dd>Chess. I built an opening trainer for my own repertoire.</dd></div>
+    </dl>
+  </div>
+</section>
+
+<style>
+  .about { padding-block: clamp(4rem, 9vw, 8rem) clamp(2rem, 5vw, 4rem); }
+  .about h2 { font-size: var(--step-4); margin-bottom: clamp(1.5rem, 3vw, 2.8rem); }
+  .about__body { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 2.5rem clamp(2rem, 6vw, 6rem); align-items: start; }
+  .about__text { display: grid; gap: 1.05em; max-width: 40em; font-size: var(--step-0); }
+  .about__lede { font-size: var(--step-1); line-height: 1.38; font-weight: 550; }
+  .about__go { margin-top: 0.6rem; }
+  .about__facts { border-top: var(--wall) solid var(--poche); }
+  .about__facts div { display: grid; grid-template-columns: 9.5rem minmax(0, 1fr); gap: 1rem; padding: 0.85rem 0 0.8rem; border-bottom: 1px solid var(--rule); }
+  .about__facts dt { font-size: var(--step--1); padding-top: 0.2em; color: var(--ink-2); }
+  .about__facts dd { font-size: var(--step-0); line-height: 1.4; font-weight: 500; }
+  @media (max-width: 62rem) {
+    .about__body { grid-template-columns: 1fr; }
+    .about__facts div { grid-template-columns: 1fr; gap: 0.2rem; }
+  }
+</style>

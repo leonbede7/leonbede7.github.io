@@ -1,0 +1,35 @@
+---
+import { SITE } from '../data/site';
+interface Props { sheet?: string; title?: string }
+const { sheet = 'A-000', title = 'Section A-A, a working car dealership' } = Astro.props;
+---
+<footer class="tb">
+  <div class="tb__grid lt">
+    <div class="tb__cell tb__cell--wide"><small>Drawing</small><span>{title}</span></div>
+    <div class="tb__cell"><small>Drawn by</small><span>{SITE.name}, directing coding agents</span></div>
+    <div class="tb__cell"><small>Sheet</small><span class="tnum">{sheet}</span></div>
+    <div class="tb__cell"><small>Revision</small><span>{SITE.revised}</span></div>
+    <div class="tb__cell tb__cell--links no-print">
+      <small>Elsewhere</small>
+      <span><a href={SITE.linkedin} rel="me noopener">LinkedIn</a> <a href={SITE.github} rel="me noopener">GitHub</a> <a href={`mailto:${SITE.email}`}>Email</a> <a href="/cv/">CV</a></span>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .tb { padding: clamp(2rem, 5vw, 4rem) var(--gutter) var(--gutter); }
+  .tb__grid {
+    display: grid; grid-template-columns: 2.2fr 1.6fr 0.7fr 1fr 1.7fr;
+    border: var(--wall) solid var(--poche);
+    max-width: 96rem; margin-inline: auto;
+  }
+  .tb__cell { padding: 0.8rem 1rem 0.9rem; border-right: var(--wall) solid var(--poche); display: grid; gap: 0.35rem; align-content: start; font-size: var(--step-0); }
+  .tb__cell:last-child { border-right: 0; }
+  .tb__cell small { font-family: var(--prose); font-style: normal; font-weight: 600; font-size: 0.72rem; letter-spacing: 0.12em; color: var(--ink-2); }
+  .tb__cell--links span { display: flex; flex-wrap: wrap; gap: 0.3rem 1rem; }
+  @media (max-width: 62rem) {
+    .tb__grid { grid-template-columns: 1fr; }
+    .tb__cell { border-right: 0; border-bottom: var(--wall) solid var(--poche); }
+    .tb__cell:last-child { border-bottom: 0; }
+  }
+</style>

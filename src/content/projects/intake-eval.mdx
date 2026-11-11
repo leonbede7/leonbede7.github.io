@@ -1,0 +1,46 @@
+---
+title: Intake Eval
+sheet: B-201
+order: 5
+kind: street
+building: lab
+status: demo
+summary: A TypeScript harness that asks what software can actually verify when a model returns a plausible answer.
+lede: A model returns a plausible summary, category and priority for a support request. Before anyone relies on it, what can software actually verify? This is a small public harness built around that question.
+role: The question, the method and the limits. Built with coding agents.
+period: September 2026
+stack: [TypeScript, Node.js 24, Playwright, GitHub Actions, DeepSeek, Ollama]
+links:
+  - { label: Open the playground, href: 'https://leonbede7.github.io/intake-eval/' }
+  - { label: Read the code, href: 'https://github.com/leonbede7/intake-eval' }
+figures:
+  - { v: '5 to 0', k: "routing mismatches on 20 synthetic development cases" }
+  - { v: '14', k: "contract checks in the failure lab" }
+  - { v: '0', k: "API keys needed to reproduce the published results" }
+---
+import Figure from '../../components/Figure.astro';
+import shot from '../../assets/other/intake-eval.png';
+
+## What it checks
+
+Building the dealership's assistant raised a general question, and I wanted to work on it away from private code and private data. Intake Eval uses invented support requests.
+
+It checks the shape of a model's output, confirms that every quoted piece of evidence really occurs in the source text, and then routes the candidate to the right kind of human review. A fixed set of cases makes regressions visible.
+
+<Figure src={shot} alt="Playground showing a recorded model response, the validation decision and a comparison of two routing policies." caption="The public playground. You can edit a quote in the candidate and watch the validator reject it. Nothing is sent to a model from this page." />
+
+## Three things you can try
+
+- **The playground** replays recorded model responses and lets you change the request, the candidate or the routing policy.
+- **The failure lab** injects faults into a local HTTP server: stalled connections, broken responses, invalid bytes. It found a real defect, a corrupt UTF-8 response that slipped through permissive decoding, which the adapter now rejects.
+- **The review workspace** asks you to judge a request before it shows you what the model said, and keeps your first assessment separate from later revisions.
+
+## What the number means
+
+On 20 targeted synthetic cases, a keyword-based routing policy made five mistakes and its replacement made none. That is a development result on cases I chose, against labels written by a model and marked provisional. It says the second policy fixed the failures I was looking at. It says nothing about accuracy in general, and no independent human evaluation has been done.
+
+The failure lab also demonstrates a limit I could not engineer away: an exact quote proves the words are in the source, not that the summary built on them is true.
+
+## Why it is here
+
+It is the smallest complete example of how I work on a model-backed feature: decide what can be verified, verify exactly that, publish the evidence, and write down what the evidence does not show. Anyone can clone the repository and reproduce the published results offline with one command.

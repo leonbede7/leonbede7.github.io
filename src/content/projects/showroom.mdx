@@ -1,0 +1,96 @@
+---
+title: Showroom
+sheet: A-103
+order: 3
+kind: room
+status: development
+summary: An AI photo studio for dealership cars. A phone photo from the lot becomes a consistent studio shot; only the background changes.
+lede: An AI photo studio for dealership cars. A phone photo taken on the lot becomes a consistent studio shot. Only the background changes; the car in the picture is the car on the lot.
+role: Product rules, pipeline design, model selection and quality criteria. Coding agents wrote the code.
+period: October 2026 to now
+stack: [Python, ONNX Runtime, BiRefNet, SAM 2.1, Modal GPU, TypeScript, sharp, Blender]
+rooms: [showroom]
+links:
+  - { label: See it on kokpit.hr, href: 'https://kokpit.hr/showroom' }
+  - { label: The platform it plugs into, href: '/work/kokpit/' }
+figures:
+  - { v: '0', k: "pixels of the car changed, by rule" }
+  - { v: '3', k: "models in the pipeline, each for one job" }
+  - { v: '8', k: "studio scenes, modelled in 3D" }
+---
+import Figure from '../../components/Figure.astro';
+import BeforeAfter from '../../components/BeforeAfter.astro';
+import Flow from '../../components/Flow.astro';
+import p3008 from '../../assets/showroom/lager-3008-plac-1280.webp';
+import s3008 from '../../assets/showroom/lager-3008-studio-1280.webp';
+import pc63 from '../../assets/showroom/lager-c63-plac-1280.webp';
+import sc63 from '../../assets/showroom/lager-c63-studio-1280.webp';
+import psport from '../../assets/showroom/lager-sportage-plac-1280.webp';
+import ssport from '../../assets/showroom/lager-sportage-studio-1280.webp';
+import mask from '../../assets/showroom/m5-maska-v6-3850.webp';
+import lot from '../../assets/showroom/m5-plac-3850.webp';
+import dark from '../../assets/showroom/scena-3008-r2-tamni-premium-1280.webp';
+import sky from '../../assets/showroom/scena-3008-r4-svjetlarnik-1280.webp';
+
+## The problem
+
+A small dealership photographs its cars where they stand: on gravel, between other cars, in whatever light the day gives. The ads then look uneven next to a franchise dealer's, and a professional photographer for every car is not in the budget.
+
+<BeforeAfter before={p3008} after={s3008} alt="Peugeot 3008" caption="Drag to compare. The left side is the source photograph; the right side is the output of the Showroom engine from that same photograph." />
+
+## The rule: never touch the car
+
+Image generators are good at making a car look better than it is. For someone selling a used car, that is a liability. So Showroom has one rule that everything else serves: **the background is replaced and the car's pixels are left alone.** Paint, wheels, dents and scratches come through exactly as photographed.
+
+The rule is enforced, not hoped for:
+
+- After rendering, the colour of the car is measured against the original with a perceptual colour-difference formula. A drift beyond the threshold fails the image.
+- Every output carries metadata that marks it as a composite, in the standard field for that purpose.
+- A dealer's approval of a result is tied to the exact recipe and the exact file. Change either and the approval no longer applies.
+
+<div class="duo">
+  <BeforeAfter before={pc63} after={sc63} alt="Mercedes-AMG C 63" />
+  <BeforeAfter before={psport} after={ssport} alt="Kia Sportage" />
+</div>
+
+## The pipeline
+
+<Flow label="The Showroom pipeline" caption="Models find things. Ordinary code makes the picture, and a measurement decides whether it may be used." steps={[
+  { t: 'Gateway', who: 'TypeScript', d: 'Verifies the installation, enforces a spending cap, meters cost.' },
+  { t: 'Segment', who: 'Python on a GPU', d: 'Three models find the car, the glass and the licence plate.' },
+  { t: 'Render', who: 'Deterministic code', d: 'Studio scene, shadows, reflection, clean edges. No generator.' },
+  { t: 'Measure', who: 'A check', d: 'The colour of the car must match the original, or the image fails.', gate: true },
+  { t: 'Approve', who: 'A person', d: 'The dealer approves this exact file and recipe.', gate: true },
+]} />
+
+**A gateway** takes the request. It is stateless, verifies a signature unique to each installation, enforces a spending cap and keeps a running cost meter.
+
+**Segmentation** runs in Python on a GPU in the EU. Three models each do the one thing they are best at:
+
+- BiRefNet finds the car. It runs on ONNX Runtime with weights pinned by checksum, so the same input gives the same mask.
+- SAM 2.1 marks glass from a single click by the dealer, because what shows through a window belongs to the old background.
+- A detector finds licence plates.
+
+Requests are signed, sizes are limited and images are held in memory only; nothing is written to disk on the GPU machine.
+
+**Rendering** is deterministic code, not a generative model. It places the car on a studio scene modelled in Blender, adds a contact shadow and a soft ambient shadow, reflects the car in the floor and cleans the colour fringe at the edge of the mask. Golden-image tests hold the result still: if a change to the renderer alters one pixel of a reference output, a test fails.
+
+<div class="duo">
+  <Figure src={lot} alt="A BMW M5 photographed on a street in autumn." caption="Source photograph." size="text" />
+  <Figure src={mask} alt="The same BMW cut out from its background with clean edges around mirrors and wheels." caption="The mask after segmentation and edge cleanup." size="text" ground="dark" />
+</div>
+
+## Scenes are built, not generated
+
+The studios are 3D scenes I had modelled and rendered with physically based lighting, using freely licensed textures. The engine works out the ground plane under the car and puts the camera in the matching place in the scene, so the room sits correctly around the car in every shot.
+
+<div class="duo">
+  <Figure src={dark} alt="Peugeot 3008 in a dark studio scene with a reflective floor." caption="Dark studio." size="text" />
+  <Figure src={sky} alt="Peugeot 3008 in a bright studio scene lit from a skylight." caption="Studio with a skylight." size="text" />
+</div>
+
+## Where it stands
+
+<p class="note">Showroom is in development. The engine, the gateway and the admin module exist and are tested, but it is not yet switched on for any dealership. What is left is running it with a real dealer's daily photographs and fixing what that shows.</p>
+
+The source photographs on this page are freely licensed stock photographs, not a customer's cars. The studio images are unretouched engine output from those photographs.

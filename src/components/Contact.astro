@@ -1,0 +1,35 @@
+---
+import Arrow from './Arrow.astro';
+import { SITE } from '../data/site';
+---
+<section id="contact" class="contact wrap">
+  <h2 class="title">Arrange <span class="lit">a visit.</span></h2>
+  <p class="contact__say">If you are hiring for AI engineering or AI product work and want to see any of these rooms in more detail, write to me.</p>
+  <ul class="contact__ways">
+    <li><a href={`mailto:${SITE.email}`}><span class="lt">Email</span><b>{SITE.email}</b><Arrow /></a></li>
+    <li><a href={SITE.linkedin} rel="me noopener"><span class="lt">LinkedIn</span><b>in/leon-bede</b><Arrow /></a></li>
+    <li><a href={SITE.github} rel="me noopener"><span class="lt">GitHub</span><b>leonbede7</b><Arrow /></a></li>
+  </ul>
+</section>
+
+<style>
+  .contact { padding-block: clamp(4rem, 9vw, 8rem) clamp(1rem, 3vw, 2rem); }
+  .contact h2 { font-size: clamp(3.2rem, 1.4rem + 8vw, 6rem); }
+  .contact__say { font-size: var(--step-1); line-height: 1.4; max-width: 30em; margin: 1.2rem 0 2.4rem; font-weight: 500; }
+  .contact__ways { display: grid; grid-template-columns: 1.5fr 1fr 1fr; border: var(--wall) solid var(--poche); }
+  .contact__ways li + li { border-left: var(--wall) solid var(--poche); }
+  .contact__ways a {
+    display: grid; grid-template-columns: 1fr auto; gap: 0.3rem 1rem; align-items: end;
+    padding: 1.1rem 1.2rem 1.15rem; text-decoration: none; height: 100%;
+    transition: background-color 0.25s var(--ease);
+  }
+  .contact__ways a:hover { background: var(--sun); }
+  .contact__ways span { grid-column: 1 / -1; font-size: var(--step--1); color: var(--ink-2); }
+  .contact__ways b { font-family: var(--letter); font-weight: 800; font-size: var(--step-2); line-height: 1; overflow-wrap: anywhere; }
+  .contact__ways :global(svg) { width: 1.9rem; height: 1.2rem; transition: transform 0.35s var(--ease); }
+  .contact__ways a:hover :global(svg) { transform: translateX(0.3rem); }
+  @media (max-width: 56rem) {
+    .contact__ways { grid-template-columns: 1fr; }
+    .contact__ways li + li { border-left: 0; border-top: var(--wall) solid var(--poche); }
+  }
+</style>

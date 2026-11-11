@@ -1,0 +1,108 @@
+---
+import { getCollection } from 'astro:content';
+import Arrow from './Arrow.astro';
+import Elevation from './Elevation.astro';
+import { ROOM_ROWS } from '../data/rooms';
+import { STATUS_LABEL } from '../data/stops';
+
+const street = (await getCollection('projects')).filter((p) => p.data.kind === 'street').sort((a, b) => a.data.order - b.data.order);
+---
+<section id="rooms" class="rooms wrap">
+  <header class="rooms__head">
+    <h2 class="title">Room schedule</h2>
+    <p>Every room in the building, the product that lives in it and how far along it is. Each row opens the sheet with the details.</p>
+  </header>
+
+  <table class="sched">
+    <thead class="lt">
+      <tr><th scope="col">No.</th><th scope="col">Room</th><th scope="col">What it does</th><th scope="col">Product</th><th scope="col">Status</th><th scope="col"><span class="vh">Sheet</span></th></tr>
+    </thead>
+    <tbody>
+      {ROOM_ROWS.map((r) => (
+        <tr>
+          <td class="sched__n"><span class="tag">{r.n}</span></td>
+          <th scope="row" class="sched__name title">{r.name}</th>
+          <td class="sched__does">{r.does}</td>
+          <td class="sched__product lt">{r.product}</td>
+          <td><span class="status" data-status={r.status}>{STATUS_LABEL[r.status]}</span></td>
+          <td class="sched__go"><a href={r.href} aria-label={`Open the sheet for ${r.name}`}><Arrow /></a></td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+
+  <div class="street">
+    <header class="street__head">
+      <h3 class="title">The rest of the street</h3>
+      <p>Smaller buildings I put up along the way. Two are open to walk into; two are still going up, and say so.</p>
+    </header>
+    <ul class="street__row">
+      {street.map((p) => (
+        <li>
+          <a href={`/work/${p.id}/`}>
+            <Elevation kind={p.data.building} label={`Elevation drawing: ${p.data.title}`} />
+            <span class="street__name title">{p.data.title} <Arrow /></span>
+          </a>
+          <p>{p.data.summary}</p>
+          <span class="status" data-status={p.data.status}>{STATUS_LABEL[p.data.status]}</span>
+        </li>
+      ))}
+    </ul>
+  </div>
+</section>
+
+<style>
+  .rooms { padding-block: clamp(4rem, 9vw, 8rem) clamp(3rem, 7vw, 6rem); }
+  .rooms__head { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 28rem); gap: 1rem 3rem; align-items: end; margin-bottom: 2rem; }
+  .rooms__head h2 { font-size: var(--step-4); }
+  .rooms__head p { font-size: var(--step-0); font-weight: 500; }
+
+  .sched { width: 100%; border-top: var(--wall) solid var(--poche); }
+  .sched thead th { text-align: left; font-size: var(--step--1); font-weight: 700; padding: 0.7rem 1rem 0.55rem 0; color: var(--ink-2); border-bottom: 1px solid var(--poche); }
+  .sched tbody tr { border-bottom: 1px solid var(--rule); transition: background-color 0.25s var(--ease); position: relative; }
+  .sched tbody tr:last-child { border-bottom: var(--wall) solid var(--poche); }
+  .sched tbody tr:hover, .sched tbody tr:focus-within { background: var(--sun); }
+  .sched td, .sched tbody th { padding: 1.05rem 1rem 0.95rem 0; vertical-align: middle; text-align: left; }
+  .sched__n { width: 3.6rem; padding-left: 0.5rem !important; }
+  .sched__name { font-size: var(--step-2); white-space: nowrap; padding-right: 2rem !important; }
+  .sched__does { font-size: var(--step-0); max-width: 34em; }
+  .sched__product { font-size: var(--step-0); white-space: nowrap; }
+  .sched__go { width: 3.4rem; text-align: right; }
+  .sched__go a { display: inline-grid; place-items: center; width: 2.9rem; height: 2.9rem; }
+  .sched__go a::after { content: ''; position: absolute; inset: 0; }
+  .sched__go a:focus-visible { outline: none; box-shadow: none; }
+  .sched tbody tr:has(a:focus-visible) { outline: 3px solid var(--poche); outline-offset: 2px; }
+  .sched__go :global(svg) { width: 1.6rem; transition: transform 0.35s var(--ease); }
+  .sched tbody tr:hover .sched__go :global(svg) { transform: translateX(0.3rem); }
+
+  .street { margin-top: clamp(3.5rem, 8vw, 7rem); }
+  .street__head { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 28rem); gap: 1rem 3rem; align-items: end; margin-bottom: 1rem; }
+  .street__head h3 { font-size: var(--step-3); }
+  .street__row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0 clamp(1rem, 2.5vw, 2.5rem); }
+  .street__row li { display: grid; gap: 0.5rem; align-content: start; }
+  .street__row a { text-decoration: none; display: grid; gap: 0.9rem; }
+  .street__row a :global(.elev) { transition: transform 0.5s var(--ease); transform-origin: 50% 90%; }
+  .street__row a:hover :global(.elev) { transform: scale(1.04); }
+  .street__name { font-size: var(--step-2); display: inline-flex; align-items: center; gap: 0.4em; }
+  .street__name :global(svg) { width: 0.9em; height: 0.56em; transition: transform 0.35s var(--ease); }
+  .street__row a:hover .street__name :global(svg) { transform: translateX(0.25em); }
+  .street__row a:hover .street__name { text-decoration: underline; text-decoration-thickness: 0.1em; text-underline-offset: 0.14em; text-decoration-color: var(--sun-deep); }
+  .street__row p { font-size: var(--step--1); line-height: 1.45; max-width: 30em; }
+
+  @media (max-width: 62rem) {
+    .rooms__head, .street__head { grid-template-columns: 1fr; }
+    .sched thead { display: none; }
+    .sched, .sched tbody { display: block; }
+    .sched tbody tr { display: grid; grid-template-columns: auto 1fr auto; gap: 0.2rem 0.9rem; padding: 1rem 0.2rem; align-items: center; }
+    .sched td, .sched tbody th { padding: 0 !important; }
+    .sched__n { width: auto; grid-row: 1; }
+    .sched__name { grid-column: 2; white-space: normal; }
+    .sched__go { grid-column: 3; grid-row: 1; }
+    .sched__does { grid-column: 1 / -1; font-size: var(--step--1); }
+    .sched__product { grid-column: 1 / 3; font-size: var(--step--1); }
+    .sched tbody tr td:nth-child(5) { grid-column: 1 / -1; }
+    .street__row { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2.4rem 1.2rem; }
+    .street__row li, .street__row a { min-width: 0; }
+    .street__name { font-size: var(--step-1); overflow-wrap: anywhere; }
+  }
+</style>

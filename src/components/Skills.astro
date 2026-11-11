@@ -1,0 +1,87 @@
+---
+import Section from './Section.astro';
+import { ROOM_NUMBER, SKILL_GROUPS } from '../data/skills';
+---
+<section id="skills" class="skills wrap">
+  <header class="skills__head">
+    <h2 class="title">Skills, as specified</h2>
+    <p>No ratings and no bars. Each skill names the rooms where it is in use, so you can go and look.<span class="skills__hint"> Point at one to see where it sits in the building.</span></p>
+  </header>
+
+  <div class="skills__body">
+    <figure class="skills__plan" data-skills-plan>
+      <Section time={12.5} mini label="Small copy of the section. Rooms light up for the skill you point at." />
+      <figcaption class="lt" data-skills-caption>Point at a skill</figcaption>
+    </figure>
+
+    <div class="skills__groups">
+      {SKILL_GROUPS.map((g) => (
+        <section class="grp">
+          <h3 class="title">{g.title}</h3>
+          <p class="grp__note">{g.note}</p>
+          <ul>
+            {g.skills.map((s) => (
+              <li data-rooms={(s.whole ? ['assistant', 'arrival', 'valuation', 'showroom', 'street', 'desk', 'workshop'] : s.rooms).join(' ')} data-skill={s.name}>
+                <span class="grp__name">{s.name}</span>
+                <span class="grp__where">
+                  {s.rooms.map((r) => <span class="tag" title={`Room ${ROOM_NUMBER[r]}`}>{ROOM_NUMBER[r]}</span>)}
+                  {s.whole && <span class="tag" title="The whole building">K</span>}
+                  {s.also && <span class="grp__also">and {s.also}</span>}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))}
+    </div>
+  </div>
+</section>
+
+<script>
+  const plan = document.querySelector<HTMLElement>('[data-skills-plan]');
+  if (plan) {
+    const caption = plan.querySelector<HTMLElement>('[data-skills-caption]')!;
+    const rooms = [...plan.querySelectorAll<SVGRectElement>('.sec__rooms .rm')];
+    const tags = [...plan.querySelectorAll<SVGGElement>('.sec__tags .tg')];
+    const rows = [...document.querySelectorAll<HTMLElement>('#skills [data-rooms]')];
+    const idle = caption.textContent ?? '';
+    const show = (row: HTMLElement | null) => {
+      const used = new Set(row ? row.dataset.rooms!.split(' ') : []);
+      rooms.forEach((r) => r.classList.toggle('is-used', used.has(r.dataset.room!)));
+      tags.forEach((t) => t.classList.toggle('is-used', used.has(t.dataset.tag!)));
+      rows.forEach((r) => r.classList.toggle('is-on', r === row));
+      caption.textContent = row ? row.dataset.skill! : idle;
+    };
+    rows.forEach((row) => {
+      row.addEventListener('pointerenter', () => show(row));
+      row.addEventListener('click', () => show(row));
+    });
+    document.querySelector('#skills .skills__groups')?.addEventListener('pointerleave', () => show(null));
+  }
+</script>
+
+<style>
+  .skills { padding-block: clamp(3rem, 7vw, 6rem); }
+  .skills__head { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 28rem); gap: 1rem 3rem; align-items: end; margin-bottom: clamp(2rem, 4vw, 3.5rem); }
+  .skills__head h2 { font-size: var(--step-4); }
+  .skills__head p { font-size: var(--step-0); font-weight: 500; }
+  .skills__body { display: grid; grid-template-columns: minmax(0, 0.8fr) minmax(0, 2fr); gap: clamp(1.5rem, 4vw, 4rem); align-items: start; }
+  .skills__plan { position: sticky; top: calc(var(--header-h) + 1.5rem); }
+  .skills__plan figcaption { margin-top: 0.8rem; font-size: var(--step-0); min-height: 2.4em; border-top: var(--wall) solid var(--poche); padding-top: 0.6rem; }
+  .skills__groups { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2.6rem clamp(1.5rem, 3vw, 3rem); }
+  .grp h3 { font-size: var(--step-2); }
+  .grp__note { font-size: var(--step--1); color: var(--ink-2); margin: 0.2rem 0 0.7rem; font-weight: 500; }
+  .grp ul { border-top: var(--wall) solid var(--poche); }
+  .grp li { display: flex; justify-content: space-between; align-items: center; gap: 0.8rem; padding: 0.55rem 0.4rem 0.5rem; border-bottom: 1px solid var(--rule); transition: background-color 0.2s var(--ease); cursor: default; }
+  .grp li.is-on { background: var(--sun); }
+  .grp__name { font-size: var(--step-0); font-weight: 600; line-height: 1.25; }
+  .grp__where { display: flex; align-items: center; gap: 0.3rem; flex: none; }
+  .grp__where .tag { font-size: 0.72rem; background: var(--ground); }
+  .grp__also { font-size: 0.8rem; white-space: nowrap; color: var(--ink-2); font-weight: 500; }
+  @media (max-width: 62rem) {
+    .skills__head { grid-template-columns: 1fr; }
+    .skills__body { grid-template-columns: 1fr; }
+    .skills__plan, .skills__hint { display: none; }
+    .skills__groups { grid-template-columns: 1fr; }
+  }
+</style>

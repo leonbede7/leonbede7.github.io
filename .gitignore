@@ -1,0 +1,22 @@
+dist/
+.astro/
+node_modules/
+npm-debug.log*
+.env
+.env.production
+.DS_Store
+.superpowers/
+test-results/
+playwright-report/
+assets-in/
+.impeccable/questions/
+.impeccable/mocks/
+.impeccable/review/
+.impeccable/decision-payload*.json
+.impeccable/brief-home.md
+.impeccable/config.local.json
+
+# internal working notes, kept out of the public repository
+PRODUCT.md
+docs/superpowers/
+.impeccable/

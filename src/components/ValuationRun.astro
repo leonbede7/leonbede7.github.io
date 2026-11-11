@@ -1,0 +1,76 @@
+---
+// One real valuation, as the demo installation returned it on 11 November 2026. Figures are the tool's own; labels are translated.
+const run = {
+  car: 'Volkswagen Golf 2.0 TDI 110 kW, 2018, 142,000 km',
+  estimate: 13946, low: 11942, high: 15561,
+  askedLow: 12213, askedHigh: 15762, ours: 16500,
+  tradeIn: 11772, profit: 1674, margin: 12, prep: 500,
+};
+const MIN = 11000, MAX = 17000;
+const x = (v: number) => 20 + ((v - MIN) / (MAX - MIN)) * 760;
+const eur = (v: number) => v.toLocaleString('en-US') + ' €';
+const steps = [
+  { k: 'Found', v: '96 listings', d: '94 unique, 92 used. Two were the same ad seen twice.' },
+  { k: 'Adjusted', v: 'each one', d: 'For year and mileage always; for engine power and equipment when known on both sides.' },
+  { k: 'Calibrated', v: '× 0.98', d: 'Asking prices brought to selling level with a factor from 14 of the dealership’s own sales.' },
+  { k: 'Trimmed', v: '2 removed', d: 'Extreme values dropped; the range is the middle half, weighted by similarity and freshness.' },
+  { k: 'Graded', v: 'Medium', d: 'Spread 26%, similarity 55.5%. High confidence needs spread under 22% and similarity over 70%, and says so.' },
+];
+---
+<figure class="val">
+  <div class="val__head">
+    <p class="val__car lt">{run.car}</p>
+    <p class="val__price"><b class="title tnum">{eur(run.estimate)}</b><span>expected selling price, from 92 market comparisons, the newest from 21 October 2026</span></p>
+  </div>
+
+  <svg viewBox="0 0 800 150" role="img" aria-label={`Range chart: estimate ${eur(run.estimate)} inside a range of ${eur(run.low)} to ${eur(run.high)}; asking prices of similar listings ${eur(run.askedLow)} to ${eur(run.askedHigh)}; the dealership's current price ${eur(run.ours)} is above both; recommended trade-in price ${eur(run.tradeIn)}.`}>
+    <path class="axis" d="M20 96H780" />
+    {[11000, 12000, 13000, 14000, 15000, 16000, 17000].map((v) => (
+      <g><path class="axis" d={`M${x(v)} 92v8`} /><text class="tick" x={x(v)} y="118" text-anchor="middle">{v / 1000}k</text></g>
+    ))}
+    <rect class="asked" x={x(run.askedLow)} y="66" width={x(run.askedHigh) - x(run.askedLow)} height="12" />
+    <rect class="range" x={x(run.low)} y="80" width={x(run.high) - x(run.low)} height="16" />
+    <path class="est" d={`M${x(run.estimate)} 52V100`} /><text class="lab strong" x={x(run.estimate)} y="44" text-anchor="middle">estimate</text>
+    <path class="mark" d={`M${x(run.ours)} 60V100`} /><text class="lab" x={x(run.ours)} y="52" text-anchor="middle">price on the car now</text>
+    <path class="mark" d={`M${x(run.tradeIn)} 60V100`} /><text class="lab" x={x(run.tradeIn)} y="52" text-anchor="middle">trade-in</text>
+    <text class="lab" x={x(run.askedHigh) + 6} y="76">asked</text>
+    <text class="tick" x="20" y="142">EUR. Solid bar: expected selling range. Dashed bar: asking prices of similar listings.</text>
+  </svg>
+
+  <p class="val__verdict">The tool’s own verdict: the price on the car, {eur(run.ours)}, is above the range of asking prices. For a trade-in it recommends {eur(run.tradeIn)}, which leaves {eur(run.profit)} after {eur(run.prep)} of preparation, a {run.margin}% margin.</p>
+
+  <ol class="val__steps">
+    {steps.map((s) => <li><span class="lt">{s.k}</span><b class="title">{s.v}</b><span>{s.d}</span></li>)}
+  </ol>
+  <figcaption>A real run on the demo installation on 11 November 2026, with the tool’s own figures and explanation, translated from Croatian and redrawn here. The dealership and its stock are invented; the market listings are the test database’s.</figcaption>
+</figure>
+
+<style>
+  .val { margin-block: clamp(1.8rem, 4vw, 3rem); max-width: none !important; border: var(--wall) solid var(--poche); }
+  .val__head { display: grid; gap: 0.5rem; padding: 1.1rem 1.2rem 0.4rem; }
+  .val__car { font-size: var(--step--1); color: var(--ink-2); }
+  .val__price { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.2rem 1rem; margin: 0 !important; }
+  .val__price b { font-size: var(--step-3); }
+  .val__price span { font-size: var(--step--1); max-width: 34em; line-height: 1.35; }
+  .val svg { width: 100%; height: auto; padding-inline: 0.4rem; color: var(--poche); font-family: var(--letter); }
+  .val .axis { stroke: currentColor; stroke-width: 1.4; fill: none; }
+  .val .tick { font-size: 12px; font-weight: 600; fill: var(--ink-2); font-variant-numeric: tabular-nums; }
+  .val .range { fill: var(--sun); stroke: currentColor; stroke-width: 1.6; }
+  .val .asked { fill: none; stroke: currentColor; stroke-width: 1.4; stroke-dasharray: 4 3; }
+  .val .est { stroke: currentColor; stroke-width: 3.4; }
+  .val .mark { stroke: currentColor; stroke-width: 1.4; stroke-dasharray: 3 3; }
+  .val .lab { font-size: 13px; font-style: italic; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; fill: currentColor; }
+  .val .lab.strong { font-size: 15px; font-weight: 850; }
+  .val__verdict { margin: 0.4rem 1.2rem 1.1rem !important; font-size: var(--step-0); font-weight: 500; max-width: 46em; }
+  .val__steps { display: grid !important; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0 !important; margin: 0 !important; border-top: var(--wall) solid var(--poche); }
+  .val__steps li { padding: 0.8rem 0.9rem 0.9rem !important; display: grid; gap: 0.25rem; align-content: start; font-size: var(--step--1); line-height: 1.38; }
+  .val__steps li::before { display: none !important; }
+  .val__steps li + li { border-left: var(--wall) solid var(--poche); }
+  .val__steps .lt { font-size: 0.78rem; color: var(--ink-2); }
+  .val__steps b { font-size: var(--step-1); }
+  .val figcaption { padding: 0.7rem 1.2rem 0.9rem; border-top: 1px solid var(--rule); font-size: var(--step--1); color: var(--ink-2); line-height: 1.4; }
+  @media (max-width: 56rem) {
+    .val__steps { grid-template-columns: 1fr; }
+    .val__steps li + li { border-left: 0; border-top: 1px solid var(--rule); }
+  }
+</style>

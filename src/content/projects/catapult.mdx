@@ -1,0 +1,36 @@
+---
+title: Catapult
+sheet: B-204
+order: 8
+kind: street
+building: site
+status: development
+summary: A mobile game built through a multi-agent studio workflow, with a prototype that was allowed to prove the first design wrong.
+lede: A mobile launch-and-fly game, in production, built by running a studio of specialised AI agents. I am the one who makes the decisions the agents bring to me.
+role: Creative direction and every design decision; operating the agent studio. Agents wrote the design documents' drafts and the code.
+period: November 2026 to now
+stack: [Unity 6, C#, Claude Code, Multi-agent workflow, Automated tests]
+figures:
+  - { v: '49', k: "specialised agents in the studio template I work with" }
+  - { v: '106', k: "C# source files so far" }
+  - { v: '64', k: "test files beside them" }
+---
+
+## What it is
+
+Catapult is a working title. You fling a cat from a junkyard launcher, ride a home-made vehicle as far as it will go, spend boost and a few precious jumps to dodge hazards, and upgrade until a rocket finally reaches space. It is a hybrid-casual game for phones, played in landscape with two thumbs.
+
+<p class="note">It is unfinished. There is a vertical slice and a production plan, not a release. This sheet will be updated when there is something to play.</p>
+
+## How it is being built
+
+I am using an open-source template, [Claude Code Game Studios](https://github.com/Donchitos/Claude-Code-Game-Studios) by Donchitos, which organises a coding agent into a studio: directors who guard the vision, leads who own a discipline, specialists who do the work, with review gates between them. The template is not mine. What I am doing with it is.
+
+- **Design documents first.** More than a dozen design documents cover the launch, flight physics, the camera, input, the upgrade economy and saving, each cross-reviewed before code.
+- **Prototypes are allowed to say no.** The first design, steering by vertical drag, was refuted by its own prototype. The second was validated and became the game.
+- **Playtests change the plan.** The vertical slice was fun for about five flights and then was not. That finding added in-flight targets, moves for each vehicle and a longer upgrade ladder.
+- **Architecture is tested.** Separate assemblies for physics, run flow, saving and platform code, each with its own tests, and a test that guards the boundaries between them.
+
+## Why it is here
+
+It is a different kind of agent work from the dealership platform: many roles instead of one, a creative product instead of an operational one, and a domain I am learning as I go. The part that carries over is the habit of making an agent's output pass a gate before it counts.

@@ -1,0 +1,52 @@
+---
+// A real conversation with the assistant on the demo installation, 11 November 2026. Translated from Croatian and shortened by one exchange.
+const turns = [
+  { who: 'me', text: 'What do I have to do today?' },
+  { who: 'it', meta: '1 step, 4.0 s', text: 'You have 4 urgent items today. Reference prices: confirm the prices on 10 September 2026 for 2 cars before 17 November. Stickers: print stickers for the 10 cars in the showroom that have none. Price list: today’s is not published; it is required from 17 November, every day by 8:00. Inquiries: 1 inquiry has gone unanswered for more than 24 hours. I suggest starting with the price list and the inquiry, then the stickers and reference prices. Shall I draft a reply to that inquiry?' },
+  { who: 'me', text: 'Golf R sold for 31.000' },
+  { who: 'it', meta: '2 steps, 4.3 s', text: 'I found the Volkswagen Golf R (2019) and one inquiry for it, from Ivan M. on 25 October. Is the buyer that inquiry, or did the sale go without a buyer from an inquiry? When you tell me, I will prepare the sale for 31,000 EUR.' },
+  { who: 'me', text: 'Sell Golf R for 31000 without a buyer' },
+];
+---
+<figure class="ex">
+  <ol class="ex__thread" aria-label="Conversation with the assistant">
+    {turns.map((t) => (
+      <li class={t.who === 'me' ? 'ex__me' : 'ex__it'}>
+        <span class="lt">{t.who === 'me' ? 'Dealer' : 'Assistant'}{t.meta && <i>{t.meta}</i>}</span>
+        <p>{t.text}</p>
+      </li>
+    ))}
+    <li class="ex__it">
+      <span class="lt">Assistant <i>2 steps, 4.1 s</i></span>
+      <div class="ex__card">
+        <p class="lt">Waiting for your confirmation</p>
+        <p class="ex__what"><b class="title">Sold for 31,000 EUR</b> Volkswagen Golf R 2.0 TSI 4Motion DSG (2019, 67,300 km). No buyer from an inquiry, so no review request goes out. Status: active becomes sold.</p>
+        <p class="ex__btns"><span class="cell cell--solid">Confirm</span><span class="cell">Dismiss</span></p>
+        <p class="ex__fine">Nothing changes until you confirm. The proposal is valid for 15 minutes.</p>
+      </div>
+    </li>
+  </ol>
+  <figcaption>A real conversation on the demo installation on 11 November 2026, translated from Croatian, shortened by one exchange and set here as text; the stock and the people are the demo’s invented data. I did not confirm the proposal.</figcaption>
+</figure>
+
+<style>
+  .ex { margin-block: clamp(1.8rem, 4vw, 3rem); max-width: 44rem; }
+  .ex__thread { display: grid !important; gap: 0.9rem !important; margin: 0 !important; border: var(--wall) solid var(--poche); padding: 1.1rem; background: var(--ground-2); }
+  .ex__thread li { padding: 0 !important; display: grid; gap: 0.35rem; max-width: 34rem; }
+  .ex__thread li::before { display: none !important; }
+  .ex__thread .lt { font-size: 0.78rem; color: var(--ink-2); }
+  .ex__thread .lt i { font-family: var(--prose); font-style: normal; font-weight: 600; text-transform: none; letter-spacing: 0; margin-left: 0.6em; }
+  .ex__thread p { margin: 0 !important; font-size: var(--step-0); line-height: 1.42; }
+  .ex__me { justify-self: end; text-align: right; }
+  .ex__me p { background: var(--poche); color: var(--ground); padding: 0.55rem 0.85rem; justify-self: end; }
+  .ex__it p { background: var(--ground); border: 1px solid var(--poche); padding: 0.6rem 0.85rem; }
+  .ex__card { border: var(--wall) solid var(--poche); background: var(--sun); padding: 0.8rem 0.9rem 0.9rem; display: grid; gap: 0.55rem; }
+  .ex__card p { background: none; border: 0; padding: 0; }
+  .ex__card .lt { color: var(--poche); }
+  .ex__what b { font-size: var(--step-1); margin-right: 0.35em; }
+  .ex__btns { display: flex; gap: 0.5rem; }
+  .ex__btns .cell { font-size: var(--step--1); padding: 0.6em 0.9em 0.52em; cursor: default; background: var(--ground); }
+  .ex__btns .cell--solid { background: var(--poche); color: var(--ground); }
+  .ex__card .ex__fine { font-size: var(--step--1); }
+  .ex figcaption { margin-top: 0.6rem; font-size: var(--step--1); color: var(--ink-2); line-height: 1.4; max-width: 60ch; }
+</style>

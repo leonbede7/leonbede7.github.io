@@ -1,0 +1,49 @@
+---
+title: Potez
+sheet: B-203
+order: 7
+kind: street
+building: pavilion
+status: demo
+summary: A local-first chess opening trainer for the openings you actually play.
+lede: A chess opening trainer I made for my own repertoire. Import a PGN, play its variations on the board, and come back to the positions you miss. Everything stays in your browser.
+role: The product, its training rules and its limits. Built with coding agents.
+period: October to November 2026
+stack: [JavaScript, Vite, chess.js, Web Workers, IndexedDB, GitHub Actions]
+links:
+  - { label: Open the trainer, href: 'https://leonbede7.github.io/potez/' }
+  - { label: Read the code, href: 'https://github.com/leonbede7/potez' }
+figures:
+  - { v: '5', k: "training modes, from guided learning to a mastery challenge" }
+  - { v: '0', k: "servers; your games never leave the browser" }
+  - { v: '1,187', k: "final positions checked with a chess engine for the study library" }
+---
+import Figure from '../../components/Figure.astro';
+import practice from '../../assets/other/potez-practice.png';
+import challenge from '../../assets/other/potez-challenge.png';
+
+## Why I made it
+
+I play chess, and I wanted to practise the openings I actually play, from my own files, not a fixed course. "Potez" is Croatian for "a move".
+
+It is the one project here with no AI in the product. I include it because it shows the other half of the job: a finished tool with a clear idea of what it is for.
+
+<Figure src={practice} alt="Potez practice screen with a chess board, a sidebar of training modes and a position from an opening." caption="Practice mode. You recall the moves; the opponent's replies play themselves." />
+
+## How it trains
+
+- **Learn** shows the next move with an arrow and the comments from your file.
+- **Practice** asks you to recall the moves.
+- **Review** brings back positions that are due, on a simple schedule of lengthening intervals.
+- **Explore** lets you browse lines, choose alternatives and keep notes on a position.
+- **Challenge** mixes repertoires and ends only when every line has been played cleanly.
+
+The challenge is the part I am fondest of. A complete line played without a mistake or a hint earns a point. Miss a move in that line later and the point is taken away until you play it cleanly again. It ends at 100% of the lines, not after a fixed number of rounds.
+
+<Figure src={challenge} alt="Potez mastery challenge screen showing progress across selected opening lines." caption="The mastery challenge keeps score in a way you can lose." />
+
+## Under the board
+
+There is no backend and no account. Files are parsed in a Web Worker so a large repertoire does not freeze the page; legal moves are replayed with an established chess library; progress is stored in the browser's own database, with export and backup.
+
+The review schedule is deliberately simple, and the project page says plainly that it is not one of the well-known spaced-repetition algorithms. The bundled study lines cite a public opening database and carry real engine analysis for 1,187 final positions.

@@ -1,0 +1,96 @@
+---
+title: The assistant
+sheet: A-102
+order: 2
+kind: room
+status: live
+summary: A tool-calling assistant inside Kokpit that answers from the dealership's data, proposes changes and waits for a person to confirm.
+lede: A tool-calling assistant inside Kokpit. It answers from the dealership's own data, proposes changes, and waits for a person to say yes. It was measured before it was released.
+role: Design of the agent, its guards and its evaluation; review of every result. Coding agents wrote the code.
+period: August 2026 to now, first inside Automobili Galerija
+stack: [TypeScript, DeepSeek, Claude, Tool calling, Postgres, Vitest, Telegram]
+rooms: [assistant, desk]
+links:
+  - { label: The platform it lives in, href: '/work/kokpit/' }
+figures:
+  - { v: '104 / 105', k: "cases passed on the live evaluation" }
+  - { v: '132 / 132', k: "offline golden cases, run on every commit" }
+  - { v: '100%', k: "on safety checks, personal data and injected instructions" }
+  - { v: '$0.0006', k: "average cost of one answer" }
+---
+import Figure from '../../components/Figure.astro';
+import Flow from '../../components/Flow.astro';
+import Exchange from '../../components/Exchange.astro';
+import proposal from '../../assets/assistant/phone-proposal.jpg';
+
+## What it does
+
+A dealer can ask it things in plain Croatian: what needs doing today, who is still waiting for a trade-in offer, which cars have stood longest. It can draft a reply to a buyer. And it can prepare changes: mark a car sold, update an inquiry, add a note.
+
+It also speaks first. Every morning there is a brief, and during the day there are alerts. Those two are computed from the data with ordinary code. No language model writes them, so there is nothing in them to hallucinate.
+
+Here is a real conversation with it on the demo installation: a question answered from data, a clarifying question before a change, and a change that waits for a yes.
+
+<Exchange />
+
+<Figure src={proposal} alt="The assistant on a phone: the message asking to sell the Golf R, and an orange card titled waiting for your confirmation with the status change, the sale price, and buttons to confirm or dismiss." caption="The end of that conversation as it looked on a phone. The card says: nothing changes until you confirm; the proposal is valid for 15 minutes." size="phone" />
+
+## It proposes. A person confirms.
+
+The model is never allowed to change anything.
+
+<Flow label="How a change reaches the database" caption="The model can read and can propose. Only a person's confirmation makes the database act." steps={[
+  { t: 'Ask', who: 'Dealer', d: 'A request in plain language, in the admin or on Telegram.' },
+  { t: 'Read', who: 'Agent', d: 'Read tools fetch stock, inquiries and sales, inside a budget for time, cost and tokens.' },
+  { t: 'Propose', who: 'Agent', d: 'A write tool creates a proposal in a ledger table. Nothing has changed yet.' },
+  { t: 'Confirm', who: 'A person', d: 'The proposal appears as a card. The dealer says yes or no.', gate: true },
+  { t: 'Apply', who: 'Database', d: 'Only now is the change applied.' },
+]} />
+
+Deleting and bulk changes are not offered as tools at all. The safest way to stop a model doing something is for the capability not to exist.
+
+## Three guards
+
+**The number guard.** Every number in an answer must appear in the data the tools returned. If the model writes a figure that is not there, the answer is replaced. A dealer who is told "nine inquiries" can rely on there being nine.
+
+**Contaminated turns.** A customer's message is text written by a stranger. When any such text enters the conversation, the turn is marked contaminated and the write tools are switched off for it. An instruction hidden in an inquiry cannot cause a change.
+
+**Pseudonyms before the model.** Names, email addresses, national ID numbers, bank accounts and vehicle identification numbers are replaced with placeholders before the request leaves, and restored in the answer. The national ID and bank account detectors verify the checksum, so they catch real ones and leave look-alikes alone.
+
+## The evaluation
+
+There are two sets. The offline set of 132 cases runs with a scripted model on every commit, and guards against regressions in the loop itself. The live set of 105 cases runs a real model against real tools on a test database, read-only, and checks each answer against the truth in that database.
+
+<div class="tablewrap">
+
+| Measure, final run | Result |
+| --- | --- |
+| Cases passed | 104 of 105 (99%) |
+| Answered, not refused | 100% |
+| Safety: personal data and injected instructions | 100% |
+| Claimed an action it had not prepared | 0 |
+| Average time to answer | 3.2 seconds |
+| Average cost per answer | $0.00062 |
+| Input served from the provider's cache | 98% |
+
+</div>
+
+The default model is DeepSeek. Claude models sit behind the same interface and scored 96 to 97% on the same set.
+
+## The evaluation was wrong before the assistant was
+
+The first run of the extended set scored 90%. It would have been easy to start changing prompts. Looking at the failures one by one showed something else:
+
+- The live evaluation could no longer run at all: the test database had grown past a row limit, and the code that reads the truth correctly refused to continue.
+- Twelve cases were pinned to specific cars that no longer existed in the test data, so nine of them "failed" while the assistant was correctly saying the car was not there.
+- Some checks rejected right answers: a number written as a word, or a clarifying question the instructions ask for.
+
+I repaired the measurement, ran the old assistant on the repaired set to get an honest "before", and only then changed the assistant. Every change after that was measured before and after on the same cases.
+
+## The one that still fails
+
+The remaining failure is a deliberately misspelled, slangy question about what someone would get for a Passat. The model sometimes reads it as a trade-in offer rather than a selling-price valuation. It is not deterministic, I know about it, and I have left it in the set rather than rewrite the question until it passes.
+
+## Limits
+
+The evaluation cases are written by hand against a test database. Real questions from production are not in the set: production conversations are off limits to the tooling by design, and I did not work around that. A score on a set I designed is a floor for behaviour I thought of, not a measurement of everything a dealer will ask.

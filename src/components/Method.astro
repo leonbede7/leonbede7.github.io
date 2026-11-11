@@ -1,0 +1,109 @@
+---
+import { FACTS } from '../data/site';
+
+const LAYERS = [
+  { n: '1', name: 'Specification', who: 'Me', text: 'What gets built and how we will know it works: requirements, acceptance criteria and a decision record for anything structural.' },
+  { n: '2', name: 'Implementation', who: 'Agents', text: 'Coding agents write the code to that specification, with project rules and custom reviewer agents for access control and routes.' },
+  { n: '3', name: 'Second opinion', who: 'Another model', text: 'A different model reviews the plan and the change. Where the two disagree, the disagreement is written down and decided.' },
+  { n: '4', name: 'Tests', who: 'Machines', text: `${FACTS.tests} automated tests, end-to-end and accessibility runs. A build proves no branding leaks between dealerships.` },
+  { n: '5', name: 'Evaluation', who: 'Machines, then me', text: 'For the assistant: 132 golden cases on every commit and 105 cases against a real model before release.' },
+  { n: '6', name: 'Confirmation', who: 'A person', text: 'In the product itself, the model only proposes. A person approves every change before the database applies it.' },
+];
+const X0 = 70, W = 176, GAP = 0;
+---
+<section id="method" class="method">
+  <div class="wrap">
+    <header class="method__head">
+      <h2 class="title">AI agents write the code. I write the drawing set.</h2>
+      <div class="method__say">
+        <p>Every line in these products was written by coding agents working to my instructions. I say so plainly, because the skill is not typing: it is deciding what gets built, drawing it precisely enough to build, inspecting the result and refusing to sign off until it holds.</p>
+        <p>Six layers stand between an agent’s output and production.<span class="method__wide"> This is the wall, cut through.</span></p>
+      </div>
+    </header>
+
+    <figure class="method__detail">
+      <svg viewBox="0 0 1200 250" role="img" aria-label="Wall build-up detail: six layers between agent output and production, numbered one to six.">
+        <defs>
+          <pattern id="w1" width="12" height="12" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><path d="M0 0V12" stroke="currentColor" stroke-width="1.4" /></pattern>
+          <pattern id="w2" width="26" height="14" patternUnits="userSpaceOnUse"><path d="M0 14L6.5 0 13 14 19.5 0 26 14" fill="none" stroke="currentColor" stroke-width="1.4" /></pattern>
+          <pattern id="w3" width="14" height="14" patternUnits="userSpaceOnUse"><path d="M0 0L14 14M14 0L0 14" stroke="currentColor" stroke-width="1.1" /></pattern>
+          <pattern id="w4" width="9" height="9" patternUnits="userSpaceOnUse"><circle cx="4.5" cy="4.5" r="1.5" fill="currentColor" /></pattern>
+          <pattern id="w5" width="22" height="11" patternUnits="userSpaceOnUse"><path d="M0 .7H22M0 11.7H22M11 0V11" stroke="currentColor" stroke-width="1.3" fill="none" /></pattern>
+        </defs>
+        {LAYERS.map((l, i) => (
+          <g>
+            <rect class="band" x={X0 + i * (W + GAP)} y="64" width={W} height="150" fill={i === 5 ? 'var(--sun)' : `url(#w${i + 1})`} />
+            <circle class="num" cx={X0 + i * (W + GAP) + W / 2} cy="30" r="17" />
+            <text x={X0 + i * (W + GAP) + W / 2} y="37" text-anchor="middle">{l.n}</text>
+            <path class="lead" d={`M${X0 + i * (W + GAP) + W / 2} 47V64`} />
+          </g>
+        ))}
+        <path class="flow" d="M0 139H1140" /><path class="flow head" d="M1126 126l16 13-16 13" />
+        <text class="cap" x="0" y="238">Agent output</text>
+        <text class="cap" x="1200" y="238" text-anchor="end">Production</text>
+      </svg>
+    </figure>
+
+    <ol class="method__layers">
+      {LAYERS.map((l) => (
+        <li>
+          <h3 class="title"><span class="tag">{l.n}</span>{l.name}</h3>
+          <p class="who lt">{l.who}</p>
+          <p>{l.text}</p>
+        </li>
+      ))}
+    </ol>
+
+    <div class="method__foot">
+      <div class="method__story">
+        <h3 class="title">What a failed check looks like</h3>
+        <p>The first live evaluation of the assistant scored 90%. Nearly every failure turned out to be a fault in the evaluation: test cases pinned to cars that were no longer in the test data, and checks that rejected correct answers. I repaired the measurement first, then measured the assistant again on the same cases: {FACTS.evalPass}, at about {FACTS.evalCost} an answer.</p>
+      </div>
+      <div class="method__figwrap">
+      <dl class="method__figures lt">
+        <div><dt>Automated tests</dt><dd class="tnum">{FACTS.tests}</dd></div>
+        <div><dt>Evaluation cases: 132 offline, 105 live</dt><dd class="tnum">237</dd></div>
+        <div><dt>Database migrations</dt><dd class="tnum">{FACTS.migrations}</dd></div>
+        <div><dt>Commits</dt><dd class="tnum">{FACTS.commits}</dd></div>
+      </dl>
+      <p class="method__measured">Kokpit repository, measured {FACTS.measured}</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .method { background: var(--night); color: var(--night-ink); padding-block: clamp(4rem, 9vw, 8rem); margin-top: clamp(2rem, 5vw, 4rem); }
+  .method ::selection { background: var(--sun); color: var(--poche); }
+  .method__head { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 1.5rem clamp(2rem, 5vw, 5rem); align-items: end; }
+  .method__head h2 { font-size: var(--step-4); }
+  .method__say { display: grid; gap: 0.9rem; font-size: var(--step-0); font-weight: 450; }
+  .method__detail { margin-top: clamp(2.5rem, 5vw, 4.5rem); }
+  .method__detail svg { width: 100%; height: auto; color: var(--night-ink); font-family: var(--letter); overflow: visible; }
+  .method__detail .band { stroke: var(--night-ink); stroke-width: 2.3; }
+  .method__detail .num { fill: var(--night); stroke: var(--night-ink); stroke-width: 2.3; }
+  .method__detail text { fill: var(--night-ink); font-size: 21px; font-weight: 800; }
+  .method__detail .cap { font-size: 19px; font-style: italic; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+  .method__detail .lead { stroke: var(--night-ink); stroke-width: 1.4; }
+  .method__detail .flow { stroke: var(--sun); stroke-width: 5; fill: none; }
+  .method__layers { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 0 clamp(0.9rem, 1.6vw, 1.6rem); margin-top: 1.4rem; padding-inline: 5.8%; }
+  .method__layers h3 { font-size: var(--step-1); display: flex; gap: 0.45em; align-items: center; }
+  .method__layers .tag { display: none; border-color: var(--night-ink); }
+  .method__layers .who { color: var(--sun); font-size: var(--step--1); margin: 0.35rem 0 0.5rem; }
+  .method__layers p:last-child { font-size: var(--step--1); line-height: 1.45; color: #c9c9c4; }
+  .method__foot { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 2rem clamp(2rem, 5vw, 5rem); margin-top: clamp(3rem, 6vw, 5rem); align-items: start; }
+  .method__story h3 { font-size: var(--step-2); margin-bottom: 0.6rem; }
+  .method__story p { font-size: var(--step-0); max-width: 38em; }
+  .method__figures { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border: var(--wall) solid var(--night-ink); border-bottom: 0; }
+  .method__figures div { padding: 0.8rem 1rem 0.7rem; border-bottom: var(--wall) solid var(--night-ink); display: grid; gap: 0.15rem; }
+  .method__figures div:nth-child(odd) { border-right: var(--wall) solid var(--night-ink); }
+  .method__figures dt { font-family: var(--prose); font-style: normal; font-weight: 600; font-size: 0.74rem; letter-spacing: 0.12em; color: #a8a9a6; }
+  .method__figures dd { font-size: var(--step-3); font-weight: 850; line-height: 0.95; }
+  .method__measured { padding: 0.6rem 1rem; font-weight: 500; font-size: var(--step--1); color: #a8a9a6; border: var(--wall) solid var(--night-ink); border-top: 0; }
+  @media (max-width: 62rem) {
+    .method__head, .method__foot { grid-template-columns: 1fr; }
+    .method__detail, .method__wide { display: none; }
+    .method__layers { grid-template-columns: 1fr; gap: 1.6rem; padding-inline: 0; margin-top: 2.5rem; }
+    .method__layers .tag { display: inline-grid; }
+  }
+</style>

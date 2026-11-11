@@ -1,0 +1,159 @@
+---
+import { getCollection, render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import Arrow from '../../components/Arrow.astro';
+import Section from '../../components/Section.astro';
+import Elevation from '../../components/Elevation.astro';
+import { STATUS_LABEL } from '../../data/stops';
+
+export async function getStaticPaths() {
+  const all = (await getCollection('projects')).sort((a, b) => a.data.order - b.data.order);
+  return all.map((entry, i) => ({ params: { slug: entry.id }, props: { entry, prev: all[i - 1] ?? all[all.length - 1], next: all[i + 1] ?? all[0] } }));
+}
+
+const { entry, next } = Astro.props;
+const d = entry.data;
+const { Content, headings } = await render(entry);
+const index = headings.filter((h) => h.depth === 2);
+const external = (href: string) => href.startsWith('http');
+---
+<Base title={d.title} description={d.summary} sheet={d.sheet} drawing={`${d.title}, ${d.kind === 'room' ? 'enlarged from Section A-A' : 'elevation'}`}>
+  <article class="sheet">
+    <header class="sheet__head wrap">
+      <div class="sheet__title">
+        <h1 class="title">{d.title}</h1>
+        <p class="sheet__lede">{d.lede}</p>
+        {d.links.length > 0 && (
+          <p class="sheet__links no-print">
+            {d.links.map((l, i) => (
+              <a class:list={['cell', { 'cell--solid': i === 0 }]} href={l.href} rel={external(l.href) ? 'noopener' : undefined}>{l.label} <Arrow /></a>
+            ))}
+          </p>
+        )}
+      </div>
+      <figure class="sheet__drawing">
+        {d.building === 'dealership'
+          ? <Section time={12.5} mini numbers={false} used={d.rooms} label={`The dealership in section with the ${d.title} rooms marked.`} />
+          : <Elevation kind={d.building} label={`Elevation drawing of ${d.title}.`} />}
+      </figure>
+    </header>
+
+    <dl class="sheet__block wrap lt">
+      <div><dt>Sheet</dt><dd class="tnum">{d.sheet}</dd></div>
+      <div><dt>Status</dt><dd><span class="status" data-status={d.status}>{STATUS_LABEL[d.status]}</span></dd></div>
+      <div><dt>My part</dt><dd>{d.role}</dd></div>
+      <div><dt>When</dt><dd>{d.period}</dd></div>
+      <div class="sheet__stack"><dt>Built with</dt><dd>{d.stack.join(' · ')}</dd></div>
+    </dl>
+
+    <div class="sheet__main wrap">
+      <div class="sheet__body">
+        <Content />
+      </div>
+      <aside class="sheet__rail">
+        {d.figures.length > 0 && (
+          <dl class="sheet__ledger">
+            {d.figures.map((f) => <div><dt>{f.k}</dt><dd class="lt tnum">{f.v}</dd></div>)}
+          </dl>
+        )}
+        {index.length > 1 && (
+          <nav class="sheet__index no-print" aria-label="On this sheet">
+            <h2 class="lt">On this sheet</h2>
+            <ol>{index.map((h) => <li><a href={`#${h.slug}`}>{h.text}</a></li>)}</ol>
+          </nav>
+        )}
+      </aside>
+    </div>
+
+    <footer class="sheet__next wrap no-print">
+      <a class="sheet__nextlink" href={`/work/${next.id}/`}>
+        <b class="title">{next.data.title}</b>
+        <Arrow />
+        <span class="lt">The next sheet, {next.data.sheet}</span>
+      </a>
+      <span class="sheet__ends"><a class="cell" href="/#rooms">All projects <Arrow /></a> <a class="cell cell--solid" href="/#contact">Arrange a visit <Arrow /></a></span>
+    </footer>
+  </article>
+</Base>
+
+<style>
+  .sheet__head { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 2rem clamp(2rem, 5vw, 5rem); align-items: end; padding-block: clamp(2rem, 5vw, 4rem) clamp(1.5rem, 3vw, 2.5rem); }
+  .sheet__title h1 { font-size: clamp(3rem, 1.5rem + 6.4vw, 6rem); }
+  .sheet__lede { font-size: var(--step-1); line-height: 1.4; font-weight: 500; max-width: 31em; margin-top: 1.1rem; }
+  .sheet__links { display: flex; flex-wrap: wrap; gap: 0.7rem; margin-top: 1.6rem; }
+  .sheet__links .cell { font-size: var(--step--1); }
+  .sheet__drawing { max-width: 34rem; justify-self: end; width: 100%; }
+  .sheet__drawing :global(.elev) { max-width: 22rem; margin-left: auto; }
+
+  .sheet__block { display: grid; grid-template-columns: 0.55fr 0.85fr 1.6fr 1fr 2fr; border: var(--wall) solid var(--poche); padding: 0; }
+  .sheet__block.wrap { max-width: calc(96rem - 2 * var(--gutter)); margin-inline: max(var(--gutter), calc((100% - 96rem) / 2 + var(--gutter))); }
+  .sheet__block div { padding: 0.8rem 1rem 0.85rem; display: grid; gap: 0.35rem; align-content: start; }
+  .sheet__block div + div { border-left: var(--wall) solid var(--poche); }
+  .sheet__block dt { font-family: var(--prose); font-style: normal; font-weight: 600; font-size: 0.72rem; letter-spacing: 0.12em; color: var(--ink-2); }
+  .sheet__block dd { font-size: var(--step-0); line-height: 1.25; }
+
+  .sheet__main { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 19rem); gap: 2rem clamp(2rem, 6vw, 6rem); align-items: start; padding-block: clamp(2rem, 5vw, 4rem); }
+  .sheet__rail { position: sticky; top: calc(var(--header-h) + 1.5rem); display: grid; gap: 2rem; }
+  .sheet__ledger { border-top: var(--wall) solid var(--poche); }
+  .sheet__ledger div { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 1rem; align-items: baseline; padding: 0.6rem 0 0.55rem; border-bottom: 1px solid var(--rule); }
+  .sheet__ledger dt { font-size: var(--step--1); line-height: 1.35; font-weight: 500; }
+  .sheet__ledger dd { font-size: var(--step-1); font-weight: 850; white-space: nowrap; }
+  .sheet__index h2 { font-size: var(--step--1); color: var(--ink-2); border-bottom: var(--wall) solid var(--poche); padding-bottom: 0.4rem; }
+  .sheet__index ol { counter-reset: s; }
+  .sheet__index li { counter-increment: s; border-bottom: 1px solid var(--rule); }
+  .sheet__index a { display: grid; grid-template-columns: 1.6rem minmax(0, 1fr); padding: 0.5rem 0 0.45rem; font-size: var(--step--1); line-height: 1.3; font-weight: 600; text-decoration: none; }
+  .sheet__index a::before { content: counter(s); font-family: var(--letter); font-weight: 800; color: var(--ink-2); }
+  .sheet__index a:hover { background: var(--sun); }
+
+  .sheet__body { min-width: 0; }
+  .sheet__body > :global(*) { max-width: 44rem; }
+  .sheet__body > :global(.plate--wide), .sheet__body > :global(.ba), .sheet__body > :global(.film), .sheet__body > :global(.duo), .sheet__body > :global(.tablewrap), .sheet__body > :global(.flow) { max-width: none; }
+  .sheet__body :global(h2) { font-family: var(--letter); font-style: italic; font-weight: 850; text-transform: uppercase; font-size: var(--step-3); line-height: 0.95; margin: clamp(3rem, 7vw, 5.5rem) 0 1.1rem; text-wrap: balance; max-width: 22ch; }
+  .sheet__body :global(h2:first-child) { margin-top: 0; }
+  .sheet__body :global(h3) { font-family: var(--letter); font-style: italic; font-weight: 800; text-transform: uppercase; letter-spacing: 0.02em; font-size: var(--step-1); margin: 2.2rem 0 0.5rem; }
+  .sheet__body :global(p) { margin-top: 0.9em; }
+  .sheet__body :global(h2 + p), .sheet__body :global(h3 + p) { margin-top: 0; }
+  .sheet__body :global(ul), .sheet__body :global(ol) { margin-top: 0.9em; display: grid; gap: 0.5em; }
+  .sheet__body :global(ul > li) { padding-left: 1.4em; position: relative; }
+  .sheet__body :global(ul > li::before) { content: ''; position: absolute; left: 0; top: 0.72em; width: 0.8em; border-top: var(--wall) solid var(--poche); }
+  .sheet__body :global(ol) { counter-reset: n; }
+  .sheet__body :global(ol > li) { padding-left: 2.3em; position: relative; counter-increment: n; }
+  .sheet__body :global(ol > li::before) { content: counter(n); position: absolute; left: 0; top: 0.08em; width: 1.6em; height: 1.6em; border: var(--wall) solid var(--poche); border-radius: 50%; display: grid; place-items: center; font-family: var(--letter); font-weight: 800; font-size: 0.85em; line-height: 1; }
+  .sheet__body :global(strong) { font-weight: 700; }
+  .sheet__body :global(.tablewrap) { overflow-x: auto; margin-top: 1.4rem; }
+  .sheet__body :global(table) { width: 100%; border-top: var(--wall) solid var(--poche); border-bottom: var(--wall) solid var(--poche); font-variant-numeric: tabular-nums; }
+  .sheet__body :global(th) { text-align: left; font-family: var(--letter); font-style: italic; text-transform: uppercase; letter-spacing: 0.05em; font-size: var(--step--1); font-weight: 700; color: var(--ink-2); padding: 0.6rem 1rem 0.5rem 0; border-bottom: 1px solid var(--poche); }
+  .sheet__body :global(td) { padding: 0.7rem 1rem 0.65rem 0; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  .sheet__body :global(tr:last-child td) { border-bottom: 0; }
+  .sheet__body :global(.duo) { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 clamp(1rem, 3vw, 2.5rem); align-items: start; }
+  .sheet__body :global(.duo .plate) { max-width: none; }
+  .sheet__body > :global(.phones) { max-width: none; display: grid; grid-template-columns: repeat(3, minmax(0, 19.5rem)); gap: 0 clamp(0.8rem, 2vw, 1.6rem); align-items: start; }
+  .sheet__body :global(.phones .plate) { max-width: none; }
+  .sheet__body :global(.film) { margin-block: clamp(1.8rem, 4vw, 3rem); }
+  .sheet__body :global(.film video) { width: 100%; border: var(--wall) solid var(--poche); background: var(--poche); aspect-ratio: 16 / 9; }
+  .sheet__body :global(.film figcaption) { margin-top: 0.6rem; font-size: var(--step--1); color: var(--ink-2); }
+  .sheet__body :global(.note) { border: var(--wall) solid var(--poche); padding: 1rem 1.2rem 1.1rem; background: var(--sun); margin-top: 1.6rem; font-weight: 500; }
+
+  .sheet__next { display: flex; justify-content: space-between; align-items: end; gap: 2rem; flex-wrap: wrap; border-top: var(--wall) solid var(--poche); padding-top: 1.6rem; }
+  .sheet__ends { display: flex; flex-wrap: wrap; gap: 0.7rem; }
+  .sheet__ends .cell { font-size: var(--step--1); }
+  .sheet__nextlink { text-decoration: none; display: grid; grid-template-columns: auto auto; gap: 0.3rem 1.2rem; align-items: end; justify-content: start; }
+  .sheet__nextlink span { grid-column: 1 / -1; font-size: var(--step--1); color: var(--ink-2); margin-top: 0.3rem; }
+  .sheet__nextlink b { font-size: var(--step-3); }
+  .sheet__nextlink :global(svg) { width: 2.4rem; height: 1.5rem; margin-bottom: 0.5rem; transition: transform 0.35s var(--ease); }
+  .sheet__nextlink:hover b { text-decoration: underline; text-decoration-color: var(--sun-deep); text-decoration-thickness: 0.08em; text-underline-offset: 0.12em; }
+  .sheet__nextlink:hover :global(svg) { transform: translateX(0.4rem); }
+
+  @media (max-width: 62rem) {
+    .sheet__head { grid-template-columns: 1fr; }
+    .sheet__drawing { justify-self: start; max-width: 24rem; order: -1; }
+    .sheet__drawing :global(.elev) { margin-left: 0; max-width: 14rem; }
+    .sheet__block { grid-template-columns: 1fr; }
+    .sheet__block div + div { border-left: 0; border-top: var(--wall) solid var(--poche); }
+    .sheet__body :global(.duo) { grid-template-columns: 1fr; }
+    .sheet__body > :global(.phones) { grid-template-columns: minmax(0, 22rem); }
+    .sheet__main { grid-template-columns: minmax(0, 1fr); }
+    .sheet__rail { position: static; order: -1; }
+    .sheet__index { display: none; }
+  }
+</style>
